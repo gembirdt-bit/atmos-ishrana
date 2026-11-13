@@ -57,6 +57,11 @@ Vrednosti su okvirne i ne zamenjuju savet lekara ili nutricioniste. Podaci o pro
 
 ## Verzije
 
+### 1.5
+- Ime u profilu i pozdrav u dnevniku
+- Motivaciona poruka koja se menja na 2 dana (60 ugrađenih, spisak se osvežava sa stranice Atmos aplikacije); može da se isključi u Podešavanjima → Izgled
+- „Još Atmos aplikacija“ na dnu Podešavanja
+
 ### 1.4
 - Online pretraga preko novog Open Food Facts servisa (Search-a-licious), stari search.pl kao rezerva, ponovni pokušaj kad je server preopterećen
 - Pretraga tablice po rečima („stark krem bananica“ nalazi Bananicu), domaći proizvodi sa proizvođačem u nazivu
