@@ -16,6 +16,7 @@
 - **Napredak** — kalorije po danima (7 / 14 / 30 dana), prosečni makronutrijenti, odakle je došlo najviše kalorija
 - **Google Drive sinhronizacija** ☁️ — isti podaci na svim tvojim uređajima
 - **Rezervna kopija** — napravi / vrati jednim dugmetom; izvoz dnevnika za Excel (CSV)
+- **Podrži autora** ☕ — aplikacija je besplatna; donacija za kafu (broj računa i IPS QR kod)
 - **Izgled** — tamna, svetla ili automatska tema, boja akcenta
 
 ## Instalacija
