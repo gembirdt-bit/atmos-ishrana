@@ -133,7 +133,7 @@ a{color:var(--acc)}
 <script src="foods.js"></script>
 <script>
 'use strict';
-const VER='1.2',KEY='atmosIshrana1';
+const VER='1.3',KEY='atmosIshrana1';
 const MEALS=[['b','Doručak','🌅'],['l','Ručak','🍲'],['d','Večera','🌙'],['s','Užine','🍎']];
 const MEAL=Object.fromEntries(MEALS.map(m=>[m[0],m]));
 const MACC={b:'doručak',l:'ručak',d:'večeru',s:'užine'};
@@ -344,7 +344,7 @@ function rSettings(){const p=P(),c=calc();
     <div class="sw" style="margin-top:12px">${ACCENTS.map(a=>`<button data-act="accent" data-v="${a}" class="${S().accent===a?'on':''}" style="background:${a}"></button>`).join('')}</div></div>`;
   h+=`<div class="card"><h3>📲 Instalacija</h3>${instEv?`<button class="btn-p" data-act="install" style="width:100%">Instaliraj aplikaciju</button>`:isStandalone()?'<div class="small muted">Aplikacija je instalirana ✔</div>':`<div class="small muted">Android / Windows (Chrome, Edge): meni ⋮ → <b>Instaliraj aplikaciju</b>.<br>iPhone (Safari): <b>Podeli</b> → <b>Dodaj na početni ekran</b>.</div>`}</div>`;
   h+=`<div class="card"><h3>☕ Podrži autora</h3><div class="small muted" style="margin-bottom:10px">Atmos Ishrana je besplatna. Ako ti se aplikacija sviđa, možeš da častiš autora kafom.</div><button class="btn-p" style="width:100%" onclick="coffeeOpen()" type="button">☕ Plati mi kafu</button></div>`;
-  h+=`<div class="card"><h3>ℹ️ O aplikaciji</h3><div class="small muted" style="line-height:1.6">Atmos Ishrana ${VER}<br>Podaci o proizvodima: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (otvorena baza, licenca ODbL). Osnovna tablica: približne vrednosti prema USDA FoodData Central.<br>
+  h+=`<div class="card"><h3>ℹ️ O aplikaciji</h3><div class="row sp" style="margin-bottom:8px"><span>Verzija <b>${VER}</b></span><button class="btn-s" data-act="updchk">🔄 Proveri ažuriranje</button></div><div class="small muted" style="line-height:1.6">Podaci o proizvodima: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (otvorena baza, licenca ODbL). Osnovna tablica: približne vrednosti prema USDA FoodData Central.<br>
     <a href="privatnost.html" target="_blank" rel="noopener">Politika privatnosti</a> · <a href="uslovi.html" target="_blank" rel="noopener">Uslovi korišćenja</a><br>Podrška: <a href="mailto:vasserviserbgd@gmail.com">vasserviserbgd@gmail.com</a><br>Autor: Gemb-Bit Željko Ilić · <a href="https://gembirdt-bit.github.io/" target="_blank" rel="noopener">Sve Atmos aplikacije</a></div></div>`;
   return h}
 
@@ -838,6 +838,8 @@ document.addEventListener('click',async ev=>{const el=ev.target.closest('[data-a
   case'pset':P()[el.dataset.k]=v;P().set=true;save();render();break;
   case'macro':{const[p,c,f]=v.split(',').map(Number);Object.assign(P(),{mp:p,mc:c,mf:f});save();render();break}
   case'theme':S().theme=v;save();render();break;
+  case'updchk':updCheck(true);break;
+  case'updnow':updApply();break;
   case'accent':S().accent=v;save();render();break;
   case'install':if(instEv){const e=instEv;e.prompt();e.userChoice.then(c=>{if(c&&c.outcome==='accepted')toast('Aplikacija se instalira ✔')}).finally(()=>{instEv=null;render()})}break;
   case'insthide':S().instHide=Date.now()+7*864e5;save();render();break;
@@ -1012,8 +1014,24 @@ addEventListener('online',()=>gdSoon(1000));
 let instEv=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();instEv=e;if(!document.querySelector('dialog[open]')&&(ui.tab==='podesavanja'||ui.tab==='dnevnik'))render()});
 addEventListener('appinstalled',()=>{instEv=null;toast('Atmos Ishrana je instalirana ✔');render()});
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(reg=>{
-  reg.addEventListener('updatefound',()=>{const w=reg.installing;w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)toast('Nova verzija je spremna — ponovo otvori aplikaciju')})})}).catch(()=>{}));
+/* ---------- AŽURIRANJE ---------- */
+let swReg=null;
+function updBar(){if($('#updbar'))return;const d=document.createElement('div');d.id='updbar';
+  d.style.cssText='position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:60;background:var(--card);border:1px solid var(--acc);border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.35)';
+  d.innerHTML='<span class="small grow">🎉 Stigla je nova verzija aplikacije</span><button class="btn-p btn-s" data-act="updnow">Ažuriraj</button>';document.body.appendChild(d)}
+async function updApply(){toast('Ažuriram…');try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch{}
+  try{if(swReg){await swReg.update();if(swReg.waiting)swReg.waiting.postMessage('skip')}}catch{}
+  setTimeout(()=>location.reload(),400)}
+async function updCheck(manual){
+  if(!navigator.onLine){if(manual)toast('Nema interneta — ažuriranje nije moguće proveriti');return}
+  try{if(swReg)swReg.update().catch(()=>{});
+    const t=await (await fetch('index.html?v='+Date.now(),{cache:'no-store'})).text(),m=t.match(/const VER='([^']+)'/),nv=m&&m[1];
+    if(nv&&nv!==VER){if(manual)updApply();else updBar()}else if(manual)toast('Imaš najnoviju verziju ('+VER+') ✔')}
+  catch{if(manual)toast('Provera nije uspela — pokušaj ponovo')}}
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{swReg=reg;
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)updBar()})});
+  setTimeout(()=>updCheck(false),4000)}).catch(()=>{}));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&swReg&&Date.now()-(updCheck.t||0)>3600e3){updCheck.t=Date.now();updCheck(false)}});
 matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(S().theme==='auto')render()});
 render();
 if(gd.on&&gdValid())gdSoon(800);

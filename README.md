@@ -57,6 +57,10 @@ Vrednosti su okvirne i ne zamenjuju savet lekara ili nutricioniste. Podaci o pro
 
 ## Verzije
 
+### 1.3
+- Ažuriranje: nova verzija stiže odmah pri otvaranju (bez interneta radi iz memorije), traka „Stigla je nova verzija — Ažuriraj“, dugme „Proveri ažuriranje“ u Podešavanjima → O aplikaciji
+- „Iz galerije“ za očitavanje tabele i za sliku barkoda (više se ne otvara kamera)
+
 ### 1.2
 - Pouzdanije očitavanje tabele sa pakovanja: latinica, ćirilica i mešano (srpski, makedonski, albanski, engleski…), nazivi u dva reda, ispravka čestih grešaka (g→9, izgubljen zarez), provera po kalorijama, više prolaza
 - Označavanje tabele prstom i okretanje slike pre očitavanja
