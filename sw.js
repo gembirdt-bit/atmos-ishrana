@@ -1,4 +1,4 @@
-const CACHE = 'atmos-ishrana-v6';
+const CACHE = 'atmos-ishrana-v7';
 const ASSETS = ['./', 'index.html', 'foods.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'privatnost.html', 'uslovi.html'];
 
 self.addEventListener('install', e => {
