@@ -128,7 +128,7 @@ a{color:var(--acc)}
 <dialog id="dlg2"></dialog>
 <input type="file" id="fileIn" accept="application/json,.json" hidden>
 <input type="file" id="imgIn" accept="image/*" capture="environment" hidden>
-<input type="file" id="ocrIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="ocrIn" accept="image/*" capture="environment" hidden><input type="file" id="ocrInG" accept="image/*" hidden>
 <div id="toast"></div>
 <script src="foods.js"></script>
 <script>
@@ -441,8 +441,8 @@ function amSave(){const f=am.food;if(!f.quick&&!(am.g>0)){toast('Upiši količin
 let ff=null;
 function openFoodForm(f,after){f=f||{};ff={f,after};const p=f.per||{};const v=k=>p[k]==null||p[k]===0&&k!=='kcal'&&!f.id?'':String(p[k]).replace('.',',');
   const d=$('#dlg2');d.innerHTML=`<div class="dh"><button class="btn-s" data-act="close2">✕</button><h2>${f.id&&f.src==='user'?'Izmeni namirnicu':'Nova namirnica'}</h2></div><div class="db">
-  ${f.code&&!f.id?`<div class="warnb">Proizvod sa barkodom <b>${esc(f.code)}</b> nije pronađen u bazi. Slikaj tabelu sa pakovanja dugmetom ispod ili prepiši vrednosti „na 100 g“ — sledeći put će ga aplikacija prepoznati odmah.</div>`:''}
-  <button class="btn-p" style="width:100%;margin-bottom:6px" data-act="ocr">📷 Očitaj vrednosti sa pakovanja</button>
+  ${f.code&&!f.id?`<div class="warnb">Proizvod sa barkodom <b>${esc(f.code)}</b> nije pronađen u bazi. Slikaj tabelu sa pakovanja (ili izaberi sliku iz galerije) dugmetom ispod ili prepiši vrednosti „na 100 g“ — sledeći put će ga aplikacija prepoznati odmah.</div>`:''}
+  <div class="row" style="gap:6px;margin-bottom:6px"><button class="btn-p grow" data-act="ocr">📷 Slikaj pakovanje</button><button class="btn-p grow" data-act="ocrg">🖼️ Iz galerije</button></div>
   <div class="xs muted" style="margin-bottom:12px">Slikaj tabelu „Nutritivne vrednosti“ izbliza, ravno i bez odsjaja. Očitani brojevi se upisuju ispod — obavezno ih proveri.</div>
   <div id="ocrbox"></div>
   <label class="l">Naziv *</label><input class="fld" id="ffn" value="${esc(f.name||'')}">
@@ -824,6 +824,7 @@ document.addEventListener('click',async ev=>{const el=ev.target.closest('[data-a
   case'newfood':openFoodForm({name:($('#dlg').open&&add.q)||''},$('#dlg').open?'amount':'');break;
   case'ffsave':ffSave();break;
   case'ocr':$('#ocrIn').click();break;
+  case'ocrg':$('#ocrInG').click();break;
   case'ffdel':if(confirm('Obrisati namirnicu? Unosi u dnevniku ostaju.')){db.foods=db.foods.filter(x=>x.id!==ff.f.id);save();$('#dlg2').close();render();toast('Obrisano')}break;
   case'fcat':fcat=v;render();break;
   case'copyy':{const y=db.entries.filter(e=>e.date===addDays(ui.date,-1)&&e.meal===v);addItems(y,v,ui.date);save();render();toast('Kopirano '+y.length+' stavki');break}
@@ -869,7 +870,7 @@ document.addEventListener('submit',ev=>ev.preventDefault());
 $('#dlg2').addEventListener('close',()=>{if(sc.stream||sc.reader)stopScan();onDClose()});
 $('#dlg').addEventListener('close',onDClose);
 $('#dlg2').addEventListener('cancel',()=>stopScan());
-$('#ocrIn').addEventListener('change',ev=>{const f=ev.target.files[0];ev.target.value='';if(f)runOcr(f)});
+['#ocrIn','#ocrInG'].forEach(s=>$(s).addEventListener('change',ev=>{const f=ev.target.files[0];ev.target.value='';if(f)runOcr(f)}));
 $('#imgIn').addEventListener('change',ev=>{scanImage(ev.target.files[0]);ev.target.value=''});
 $('#fileIn').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
   try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.entries))throw 0;
