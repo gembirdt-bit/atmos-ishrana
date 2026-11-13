@@ -57,6 +57,10 @@ Vrednosti su okvirne i ne zamenjuju savet lekara ili nutricioniste. Podaci o pro
 
 ## Verzije
 
+### 1.4
+- Online pretraga preko novog Open Food Facts servisa (Search-a-licious), stari search.pl kao rezerva, ponovni pokušaj kad je server preopterećen
+- Pretraga tablice po rečima („stark krem bananica“ nalazi Bananicu), domaći proizvodi sa proizvođačem u nazivu
+
 ### 1.3
 - Ažuriranje: nova verzija stiže odmah pri otvaranju (bez interneta radi iz memorije), traka „Stigla je nova verzija — Ažuriraj“, dugme „Proveri ažuriranje“ u Podešavanjima → O aplikaciji
 - „Iz galerije“ za očitavanje tabele i za sliku barkoda (više se ne otvara kamera)

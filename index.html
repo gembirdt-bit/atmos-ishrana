@@ -133,7 +133,7 @@ a{color:var(--acc)}
 <script src="foods.js"></script>
 <script>
 'use strict';
-const VER='1.3',KEY='atmosIshrana1';
+const VER='1.4',KEY='atmosIshrana1';
 const MEALS=[['b','Doručak','🌅'],['l','Ručak','🍲'],['d','Večera','🌙'],['s','Užine','🍎']];
 const MEAL=Object.fromEntries(MEALS.map(m=>[m[0],m]));
 const MACC={b:'doručak',l:'ručak',d:'večeru',s:'užine'};
@@ -361,6 +361,11 @@ function addHtml(){const rm=add.mode==='recipe';return`<div class="dh">${rm?`<bu
   <form id="aform" class="row" style="margin-top:10px" onsubmit="return false"><input class="fld grow" id="aq" type="search" enterkeyhint="search" placeholder="Npr. jogurt, hleb, Plazma…" autocomplete="off" data-in="aq"><button class="btn-p" data-act="osearch" type="submit">🔍</button></form>
   <div class="row" style="margin-top:10px"><button class="grow" data-act="scan">📷 Skeniraj barkod</button>${rm?'':`<button class="grow" data-act="quick">⚡ Brzi unos</button>`}<button data-act="newfood" title="Nova namirnica">✏️</button></div>
   <div id="alist"></div></div>`}
+/* pretraga po rečima: „stark krem bananica“ nalazi „Bananica (Štark)“; ceo pogodak > sve reči > deo reči */
+function qScore(n,q){if(!q)return 0;if(n.includes(q))return 100+(n.startsWith(q)?10:0);
+  const ws=q.split(/[^a-z0-9]+/).filter(w=>w.length>=2);if(!ws.length)return 0;let hit=0,long=0;
+  for(const w of ws){const re=new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));if(re.test(n)||(w.length>=4&&n.includes(w))){hit++;if(w.length>=4)long++}}
+  if(hit===ws.length)return 50+hit;return long?10*hit/ws.length:0}
 function rAddList(){const el=$('#alist');if(!el)return;const q=norm(add.q);let h='';
   const rm=add.mode==='recipe';
   if(!q){const r=recentFoods(15).filter(f=>!rm||!f.rid),fav=db.foods.filter(f=>f.fav);
@@ -370,8 +375,8 @@ function rAddList(){const el=$('#alist');if(!el)return;const q=norm(add.q);let h
     if(r.length)h+=`<div class="sec">🕘 Nedavno</div>`+r.map((f,i)=>fItem(Object.assign({},f,{id:'r'+i}),'pickr')).join('');
     if(!fav.length&&!r.length)h+=`<div class="empty">Ukucaj naziv namirnice ili proizvoda, ili skeniraj barkod sa ambalaže 📷</div>`;
     el.innerHTML=h;return}
-  const mine=db.foods.filter(f=>norm(f.name+' '+(f.brand||'')).includes(q)).slice(0,20);
-  const base=BASE.filter(f=>f._n.includes(q)).sort((a,b)=>(a._n.startsWith(q)?0:1)-(b._n.startsWith(q)?0:1)).slice(0,25);
+  const mine=db.foods.map(f=>[f,qScore(norm(f.name+' '+(f.brand||'')),q)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,20).map(x=>x[0]);
+  const base=BASE.map(f=>[f,qScore(f._n,q)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,25).map(x=>x[0]);
   const mk=new Set(mine.map(fkey)),base2=base.filter(f=>!mk.has(fkey(f)));
   const recs=rm?[]:db.recipes.filter(r=>norm(r.name).includes(q));
   if(recs.length)h+=`<div class="sec">📖 Moji recepti</div>`+recs.map(r=>fItem(recipeFood(r),'pick')).join('');
@@ -383,6 +388,18 @@ function rAddList(){const el=$('#alist');if(!el)return;const q=norm(add.q);let h
   else if(add.online&&add.online.q===add.q)h+=add.online.list.length?add.online.list.map(f=>fItem(f,'picko')).join(''):`<div class="empty">Nema rezultata. Probaj drugi naziv ili skeniraj barkod.</div>`;
   else h+=`<button style="width:100%" data-act="osearch">🔍 Traži „${esc(add.q)}“ na internetu</button>`;
   el.innerHTML=h}
+/* pretraga Open Food Facts: prvo novi servis (Search-a-licious), pa stari search.pl kao rezerva; svaki korak sa ponovnim pokušajem */
+async function offJson(u,ms){for(let i=0;i<2;i++){try{const r=await offTimeout(u,ms||12000);if(r.ok)return await r.json();if(r.status<500&&r.status!==429)throw new Error('http '+r.status)}catch(e){if(i)throw e}await new Promise(r=>setTimeout(r,700))}throw new Error('server')}
+async function offFind(q){let rs=[],ok=false;const seen=new Set(),addp=a=>{for(const p of a||[])if(p&&p.code&&!seen.has(p.code)){seen.add(p.code);rs.push(p)}};
+  try{const j=await offJson('https://search.openfoodfacts.org/search?q='+encodeURIComponent(q)+'&page_size=30&langs=sr,hr,bs,en&fields='+OFF_F,10000);ok=true;
+    let hits=(j.hits||[]).filter(p=>p.code);
+    if(hits.length&&hits.some(p=>!p.nutriments)){try{const d=await offJson(OFF+'/api/v2/search?code='+hits.map(p=>p.code).join(',')+'&page_size=30&fields='+OFF_F,10000);const m=new Map((d.products||[]).map(p=>[p.code,p]));hits=hits.map(p=>m.get(p.code)||p)}catch{}}
+    addp(hits)}catch{}
+  if(rs.length<8){const base=OFF+'/cgi/search.pl?search_simple=1&action=process&json=1&page_size=30&sort_by=unique_scans_n&fields='+OFF_F+'&search_terms='+encodeURIComponent(q);
+    try{addp(((await offJson(base+'&tagtype_0=countries&tag_contains_0=contains&tag_0=serbia')).products));ok=true}catch{}
+    if(rs.length<8)try{addp(((await offJson(base)).products));ok=true}catch{}}
+  if(!ok)throw new Error('server');
+  return rs.map(mapOff).filter(f=>!f.nokcal)}
 function offTimeout(url,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||15000);return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t))}
 function mapOff(p){const n=p.nutriments||{};const g=k=>{const v=num(n[k+'_100g']);return v==null?null:v};
   let kcal=g('energy-kcal');if(kcal==null){const kj=g('energy-kj')!=null?g('energy-kj'):g('energy');if(kj!=null)kcal=kj/4.184}
@@ -394,13 +411,9 @@ async function offSearch(){if(!add.q.trim()||add.busy)return;if(!navigator.onLin
   const q=add.q,ck=norm(q).trim();let cache={};try{cache=JSON.parse(localStorage.getItem(KEY+'_offc'))||{}}catch{}
   if(cache[ck]&&Date.now()-cache[ck].t<7*864e5){add.online={q,list:cache[ck].list};add.err='';rAddList();return}
   add.busy=true;add.err='';rAddList();
-  try{const base=OFF+'/cgi/search.pl?search_simple=1&action=process&json=1&page_size=30&sort_by=unique_scans_n&fields='+OFF_F+'&search_terms='+encodeURIComponent(q);
-    const get=async u=>((await (await offTimeout(u)).json()).products||[]).filter(p=>p.code);
-    let rs=await get(base+'&tagtype_0=countries&tag_contains_0=contains&tag_0=serbia');
-    if(rs.length<8){const w=await get(base);const s=new Set(rs.map(p=>p.code));rs=rs.concat(w.filter(p=>!s.has(p.code)))}
-    const list=rs.map(mapOff).filter(f=>!f.nokcal);add.online={q,list};
-    cache[ck]={t:Date.now(),list};const ks=Object.keys(cache).sort((a,b)=>cache[b].t-cache[a].t);ks.slice(40).forEach(k=>delete cache[k]);try{localStorage.setItem(KEY+'_offc',JSON.stringify(cache))}catch{}}
-  catch(e){add.err=e.name==='AbortError'?'Server ne odgovara (Open Food Facts je ponekad spor).':'Pretraga nije uspela — proveri internet.'}
+  try{const list=await offFind(q);add.online={q,list};
+    if(list.length){cache[ck]={t:Date.now(),list};const ks=Object.keys(cache).sort((a,b)=>cache[b].t-cache[a].t);ks.slice(40).forEach(k=>delete cache[k]);try{localStorage.setItem(KEY+'_offc',JSON.stringify(cache))}catch{}}}
+  catch(e){add.err=!navigator.onLine?'Nema interneta.':'Online pretraga trenutno ne radi (Open Food Facts server je preopterećen). Pokušaj ponovo za minut ili skeniraj barkod — namirnice iz tablice su prikazane iznad.'}
   add.busy=false;if(add.q===q)rAddList()}
 
 /* ---------- DIJALOG: KOLIČINA ---------- */
