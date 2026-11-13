@@ -1,4 +1,4 @@
-const CACHE = 'atmos-ishrana-v3';
+const CACHE = 'atmos-ishrana-v4';
 const ASSETS = ['./', 'index.html', 'foods.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'privatnost.html', 'uslovi.html'];
 
 self.addEventListener('install', e => {
@@ -25,6 +25,16 @@ self.addEventListener('fetch', e => {
         return res;
       }).catch(() => hit || caches.match('index.html'));
       return hit || net;
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+      if (cs.length) return cs[0].focus();
+      return self.clients.openWindow('./index.html');
     })
   );
 });

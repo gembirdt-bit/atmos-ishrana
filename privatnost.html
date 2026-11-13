@@ -8,7 +8,7 @@
 <p><b>Atmos Ishrana</b> je aplikacija za praćenje kalorija i nutrijenata. Autor aplikacije je Gemb-Bit Željko Ilić. Ova stranica objašnjava koje podatke aplikacija koristi i gde se oni čuvaju.</p>
 
 <h2>Koje podatke aplikacija čuva</h2>
-<p>Podatke koje sam upišeš: dnevnik ishrane (namirnice, količine, obroci), svoje namirnice, unos vode, merenja težine i profil koji služi za proračun dnevnog cilja (pol, godine, visina, težina, nivo aktivnosti, cilj). Aplikacija ne traži ime, broj telefona, lokaciju niti nalog.</p>
+<p>Podatke koje sam upišeš: dnevnik ishrane (namirnice, količine, obroci), svoje namirnice, recepte i šablone obroka, fizičku aktivnost, post, unos vode, merenja težine i profil koji služi za proračun dnevnog cilja (pol, godine, visina, težina, nivo aktivnosti, cilj). Aplikacija ne traži ime, broj telefona, lokaciju niti nalog.</p>
 
 <h2>Gde se podaci čuvaju</h2>
 <ul>
@@ -18,7 +18,7 @@
 <p>Autor aplikacije nema server i nema pristup tvojim podacima. Podaci se ne šalju autoru niti bilo kome trećem, ne prodaju se i ne koriste za reklame ili praćenje.</p>
 
 <h2>Pretraga proizvoda i skeniranje barkoda</h2>
-<p>Kad pretražuješ proizvode na internetu ili skeniraš barkod, aplikacija šalje <b>samo tekst pretrage ili broj barkoda</b> otvorenoj bazi <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a>, koja vraća podatke o proizvodu. Tvoj dnevnik i profil se ne šalju. Slika sa kamere obrađuje se na tvom uređaju i ne šalje se nigde. Ako pregledač ne podržava ugrađeno prepoznavanje barkoda, sa interneta se jednom preuzima biblioteka ZXing (unpkg.com / jsdelivr.net).</p>
+<p>Kad pretražuješ proizvode na internetu ili skeniraš barkod, aplikacija šalje <b>samo tekst pretrage ili broj barkoda</b> otvorenoj bazi <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a>, koja vraća podatke o proizvodu. Tvoj dnevnik i profil se ne šalju. Slika sa kamere (barkod ili tabela nutritivnih vrednosti) obrađuje se na tvom uređaju i ne šalje se nigde. Za očitavanje tabele prvi put se sa interneta preuzima modul za prepoznavanje teksta (Tesseract.js) sa jezičkim paketom. Ako pregledač ne podržava ugrađeno prepoznavanje barkoda, sa interneta se jednom preuzima biblioteka ZXing (unpkg.com / jsdelivr.net).</p>
 
 <h2>Google Drive i Google podaci</h2>
 <p>Kad povežeš Google Drive, aplikacija od Google-a traži samo dozvolu <code>drive.file</code>: pristup isključivo fajlovima koje je sama napravila. Aplikacija ne vidi, ne čita i ne menja ostale fajlove na tvom Google Drive-u, niti tvoje mejlove, kontakte ili druge Google podatke. Iz Google naloga čita se još samo adresa e-pošte, da bi u Podešavanjima pisalo koji je nalog povezan.</p>
