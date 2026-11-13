@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<title>Atmos Ishrana — Kalorije i nutrijenti</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1512">
+<meta name="description" content="Praćenje kalorija i nutrijenata, skeniranje barkoda, tablica namirnica i Google Drive sinhronizacija">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Atmos Ishrana">
+<style>
+:root{--acc:#f0782f;--bg:#0c1512;--bg2:#111e1a;--card:#16251f;--card2:#1d3029;--line:rgba(255,255,255,.1);--txt:#eef7f3;--muted:#98b3a8;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;--p:#60a5fa;--c:#fbbf24;--f:#f472b6;--r:16px;--nav:64px}
+:root[data-theme=light]{--bg:#f4f6f3;--bg2:#e9eee9;--card:#fff;--card2:#f1f4f0;--line:rgba(10,50,35,.12);--txt:#14231c;--muted:#5b6f66;--ok:#059669;--warn:#b45309;--bad:#dc2626;--p:#2563eb;--c:#d97706;--f:#db2777}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:calc(var(--nav) + 30px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card2);border-radius:12px;padding:10px 14px;font-size:.9rem}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.5}
+.btn-p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn-d{background:rgba(248,113,113,.15);color:var(--bad);border-color:rgba(248,113,113,.4)}
+.btn-s{padding:6px 10px;font-size:.8rem;border-radius:10px}
+.btn-g{background:none;border-color:transparent;color:var(--muted)}
+.fld{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:1rem}
+.fld:focus{outline:2px solid var(--acc);outline-offset:-1px}
+select.fld option{color:#000}
+label.l{display:block;font-size:.72rem;color:var(--muted);margin:0 0 4px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 12px 8px}
+.top-in{max-width:900px;margin:auto;display:flex;gap:8px;align-items:center}
+.logo{font-weight:800;letter-spacing:.5px;font-size:1rem;white-space:nowrap;flex:1}.logo b{color:var(--acc)}
+.logo img{width:26px;height:26px;border-radius:7px;vertical-align:middle;margin-right:6px}
+.shell{max-width:900px;margin:auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:.95rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.grid{display:grid;gap:10px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.row{display:flex;gap:10px;align-items:center}.sp{justify-content:space-between}.wrap{flex-wrap:wrap}.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}.small{font-size:.8rem}.xs{font-size:.72rem}.b{font-weight:700}
+.stat{background:var(--card2);border-radius:12px;padding:10px;text-align:center}
+.stat small{color:var(--muted);font-size:.7rem;display:block}.stat b{font-size:1.05rem;display:block;margin-top:2px}
+.empty{text-align:center;color:var(--muted);padding:20px 10px;font-size:.9rem}
+.pnav{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnav .lbl{flex:1;text-align:center;font-weight:700;padding:8px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.pnav button{min-width:46px}
+.hero{display:flex;gap:16px;align-items:center}
+.ring{position:relative;width:150px;height:150px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring .in b{font-size:1.7rem;line-height:1.1}.ring .in small{color:var(--muted);font-size:.72rem}
+.hsum{flex:1;min-width:0;display:grid;gap:8px}
+.hsum div{display:flex;justify-content:space-between;font-size:.88rem}
+.mac{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mac .t{font-size:.72rem;color:var(--muted)}.mac .t span{display:block}.mac .t span+span{color:var(--txt);font-weight:600}
+.bar{height:8px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;border-radius:6px}
+.meal h3 .k{font-weight:700;color:var(--muted);font-size:.85rem}
+.ent{display:flex;gap:10px;align-items:center;padding:9px 4px;border-top:1px solid var(--line);cursor:pointer}
+.ent:first-of-type{border-top:0}
+.ent .n{font-weight:600;font-size:.92rem;word-break:break-word}
+.ent .k{font-weight:700;white-space:nowrap;font-size:.9rem}
+.ent img,.fi img{width:38px;height:38px;border-radius:8px;object-fit:cover;background:var(--card2);flex:none}
+.ent .ph,.fi .ph{width:38px;height:38px;border-radius:8px;background:var(--card2);display:flex;align-items:center;justify-content:center;flex:none;font-size:1.2rem}
+.fi{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:6px;cursor:pointer}
+.fi .n{font-weight:600;font-size:.92rem;word-break:break-word}
+.fi .k{font-weight:700;white-space:nowrap;text-align:right;font-size:.9rem}
+.sec{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:14px 2px 6px}
+.ns{display:inline-block;width:18px;height:18px;border-radius:5px;color:#fff;font-weight:800;font-size:.7rem;text-align:center;line-height:18px;margin-left:4px;vertical-align:middle}
+.ns-a{background:#038141}.ns-b{background:#85bb2f}.ns-c{background:#fecb02;color:#000}.ns-d{background:#ee8100}.ns-e{background:#e63e11}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:.68rem;font-weight:700;background:var(--card2);color:var(--muted);vertical-align:middle}
+.seg{display:flex;background:var(--card2);border-radius:12px;padding:3px;gap:3px}.seg button{flex:1;border:0;background:none;padding:8px 4px;border-radius:9px;font-size:.83rem}.seg button.on{background:var(--acc);color:#fff;font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{padding:7px 11px;font-size:.82rem;border-radius:999px}
+.water{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 10px}.water span{font-size:1.25rem;opacity:.25}.water span.on{opacity:1}
+nav.bot{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.bot .in{max-width:900px;margin:auto;display:flex;height:var(--nav)}
+nav.bot button{flex:1;border:0;background:none;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.68rem;color:var(--muted);padding:4px}
+nav.bot button span{font-size:1.3rem}
+nav.bot button.on{color:var(--acc);font-weight:700}
+.fab{position:fixed;right:16px;bottom:calc(var(--nav) + 16px + env(safe-area-inset-bottom));z-index:25;display:flex;gap:10px}
+.fab button{width:56px;height:56px;border-radius:50%;font-size:1.5rem;padding:0;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+dialog{border:0;padding:0;background:var(--bg);color:var(--txt);width:100%;max-width:640px;max-height:100%;height:100%;margin:auto}
+@media(min-width:700px){dialog{height:auto;max-height:92vh;border-radius:18px;border:1px solid var(--line)}}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+.dh{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;border-bottom:1px solid var(--line)}
+.dh h2{flex:1;margin:0;font-size:1.02rem}
+.db{padding:12px 12px calc(24px + env(safe-area-inset-bottom))}
+.nut{width:100%;border-collapse:collapse;font-size:.86rem}.nut td{padding:6px 2px;border-bottom:1px solid var(--line)}.nut td:last-child{text-align:right;font-weight:600}
+.big{font-size:2rem;font-weight:800}
+.chart{display:flex;gap:4px;align-items:flex-end;height:150px;position:relative;margin-top:6px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.chart .col i{width:100%;max-width:26px;border-radius:5px 5px 2px 2px;background:var(--acc);display:block;min-height:2px}
+.chart .col i.over{background:var(--bad)}.chart .col i.no{background:var(--card2)}
+.chart .col small{font-size:.58rem;color:var(--muted);margin-top:3px;white-space:nowrap}
+.chart .goal{position:absolute;left:0;right:0;border-top:2px dashed var(--ok);opacity:.7;pointer-events:none}
+#scanv{width:100%;border-radius:14px;background:#000;aspect-ratio:4/3;object-fit:cover;display:block}
+.scanbox{position:relative}
+.scanbox .aim{position:absolute;left:12%;right:12%;top:38%;bottom:38%;border:3px solid var(--acc);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.25);pointer-events:none}
+.scanbox .ln{position:absolute;left:14%;right:14%;top:50%;height:2px;background:var(--bad);opacity:.8;animation:sl 1.6s ease-in-out infinite;pointer-events:none}
+@keyframes sl{0%,100%{transform:translateY(-22px)}50%{transform:translateY(22px)}}
+#toast{position:fixed;left:50%;bottom:calc(var(--nav) + 86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.88rem;z-index:100;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+.warnb{background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:10px;font-size:.85rem;margin-bottom:10px}
+.okb{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);border-radius:12px;padding:10px;font-size:.85rem;margin-bottom:10px}
+.sw{display:flex;gap:8px;flex-wrap:wrap}.sw button{width:32px;height:32px;border-radius:50%;padding:0;border:3px solid transparent}.sw button.on{border-color:var(--txt)}
+details summary{cursor:pointer;color:var(--muted);font-size:.85rem;padding:6px 0}
+footer{text-align:center;color:var(--muted);font-size:.75rem;padding:10px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="logo"><img src="icon-192.png" alt="">Atmos <b>Ishrana</b></div>
+  <span id="gdst" class="small muted"></span>
+</div></header>
+<main class="shell" id="app"></main>
+<div class="fab" id="fab"></div>
+<nav class="bot"><div class="in" id="nav"></div></nav>
+<dialog id="dlg"></dialog>
+<dialog id="dlg2"></dialog>
+<input type="file" id="fileIn" accept="application/json,.json" hidden>
+<input type="file" id="imgIn" accept="image/*" capture="environment" hidden>
+<div id="toast"></div>
+<script src="foods.js"></script>
+<script>
+'use strict';
+const VER='1.0',KEY='atmosIshrana1';
+const MEALS=[['b','Doručak','🌅'],['l','Ručak','🍲'],['d','Večera','🌙'],['s','Užine','🍎']];
+const MEAL=Object.fromEntries(MEALS.map(m=>[m[0],m]));
+const MACC={b:'doručak',l:'ručak',d:'večeru',s:'užine'};
+const NK=['kcal','p','c','f','fib','sug','sat','salt'];
+const NL={kcal:'Energija',p:'Proteini',c:'Ugljeni hidrati',f:'Masti',fib:'Vlakna',sug:'od toga šećeri',sat:'od toga zasićene',salt:'So'};
+const ACT=[[1.2,'Sedentarno (malo ili bez kretanja)'],[1.375,'Lagana aktivnost (1–3 dana nedeljno)'],[1.55,'Umerena aktivnost (3–5 dana)'],[1.725,'Visoka aktivnost (6–7 dana)'],[1.9,'Vrlo visoka (fizički posao + trening)']];
+const ACCENTS=['#f0782f','#0f9d78','#3b82f6','#8b5cf6','#e11d48','#eab308'];
+const OFF='https://world.openfoodfacts.org';
+const OFF_F='code,product_name,product_name_sr,generic_name,brands,quantity,serving_quantity,nutriments,image_front_small_url,nutriscore_grade';
+
+/* ---------- pomoćne ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ds(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ds(d)};
+const DAYS=['ned','pon','uto','sre','čet','pet','sub'];
+const MONS=['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'];
+function dlabel(s){const t=today();if(s===t)return'Danas';if(s===addDays(t,-1))return'Juče';if(s===addDays(t,1))return'Sutra';const d=new Date(s+'T12:00:00');return DAYS[d.getDay()]+', '+d.getDate()+'. '+MONS[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'')}
+const r0=x=>Math.round(Number(x)||0);
+const r1=x=>{const v=Math.round((Number(x)||0)*10)/10;return String(v).replace('.',',')};
+const num=v=>{if(v==null||v==='')return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
+const CYR={'а':'a','б':'b','в':'v','г':'g','д':'d','ђ':'dj','е':'e','ж':'z','з':'z','и':'i','ј':'j','к':'k','л':'l','љ':'lj','м':'m','н':'n','њ':'nj','о':'o','п':'p','р':'r','с':'s','т':'t','ћ':'c','у':'u','ф':'f','х':'h','ц':'c','ч':'c','џ':'dz','ш':'s'};
+const norm=s=>String(s||'').toLowerCase().replace(/[а-џ]/g,c=>CYR[c]||c).replace(/đ/g,'dj').normalize('NFD').replace(/[̀-ͯ]/g,'');
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2600)}
+
+/* ---------- podaci ---------- */
+function freshProfile(){return{set:false,sex:'m',age:30,height:175,weight:75,goalW:null,act:1.375,goal:'keep',rate:0.5,kcal:0,mp:25,mc:45,mf:30,water:2000}}
+function fresh(){return{v:1,profile:freshProfile(),entries:[],foods:[],weights:[],water:[],settings:{theme:'dark',accent:ACCENTS[0]}}}
+function normDb(x){const f=fresh();x=x&&typeof x==='object'?x:{};
+  const o={v:1,profile:Object.assign(freshProfile(),x.profile||{}),settings:Object.assign(f.settings,x.settings||{})};
+  ['entries','foods','weights','water'].forEach(k=>o[k]=Array.isArray(x[k])?x[k].filter(r=>r&&r.id):[]);return o}
+let db=(()=>{try{return normDb(JSON.parse(localStorage.getItem(KEY)))}catch{return fresh()}})();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch{toast('⚠ Memorija uređaja je puna')}gdSoon()}
+const S=()=>db.settings,P=()=>db.profile;
+const hasData=()=>db.entries.length||db.foods.length||db.weights.length;
+
+/* ---------- ciljevi ---------- */
+function calc(){const p=P(),kg=Number(p.weight)||70,cm=Number(p.height)||170,age=Number(p.age)||30;
+  const bmr=10*kg+6.25*cm-5*age+(p.sex==='f'?-161:5),tdee=bmr*(Number(p.act)||1.2);
+  const d=p.goal==='lose'?-p.rate*7700/7:p.goal==='gain'?p.rate*7700/7:0;
+  const floor=p.sex==='f'?1200:1500;let auto=Math.round((tdee+d)/10)*10,low=false;
+  if(auto<floor){auto=floor;low=true}
+  const kcal=Number(p.kcal)>0?Number(p.kcal):auto;
+  const g={kcal,p:kcal*p.mp/100/4,c:kcal*p.mc/100/4,f:kcal*p.mf/100/9,water:Number(p.water)||2000};
+  const bmi=kg/((cm/100)**2);
+  return{bmr,tdee,auto,low,g,bmi,floor}}
+
+/* ---------- namirnice ---------- */
+const BASE=BASE_FOODS.map((a,i)=>({id:'b'+i,name:a[0],src:'base',cat:a[6],per:{kcal:a[1],p:a[2],c:a[3],f:a[4],fib:a[5]},pc:a[7]?{g:a[7],l:a[8]}:null,_n:norm(a[0])}));
+const fkey=f=>f.code?'c:'+f.code:'n:'+norm(f.name)+'|'+norm(f.brand);
+function entTot(e,k){return(Number(e.per&&e.per[k])||0)*(Number(e.g)||0)/100}
+function dayEntries(d){return db.entries.filter(e=>e.date===d)}
+function sumOf(list){const t={};NK.forEach(k=>t[k]=0);list.forEach(e=>NK.forEach(k=>t[k]+=entTot(e,k)));return t}
+function foodFromEntry(e){return{id:e.fid||'',name:e.name,brand:e.brand,code:e.code,per:e.per,pc:e.pc,serving:e.serving,img:e.img,ns:e.ns,src:e.src||'user',quick:e.quick}}
+function findFood(id){return db.foods.find(f=>f.id===id)||BASE.find(f=>f.id===id)}
+function upsertFood(f){const k=fkey(f),i=db.foods.findIndex(x=>(f.id&&x.id===f.id)||fkey(x)===k);
+  const rec=Object.assign({},i>=0?db.foods[i]:{},f);delete rec._n;delete rec._g;delete rec.nokcal;
+  rec.id=i>=0?db.foods[i].id:(f.id&&!/^(b\d|off:|r\d)/.test(f.id)?f.id:uid());
+  if(i>=0)db.foods[i]=rec;else db.foods.push(rec);return rec}
+function recentFoods(n){const seen=new Set(),out=[];[...db.entries].sort((a,b)=>(b.t||0)-(a.t||0)).forEach(e=>{if(e.quick)return;const f=foodFromEntry(e),k=fkey(f);if(seen.has(k))return;seen.add(k);out.push(Object.assign(f,{_g:e.g}))});return out.slice(0,n)}
+function isFav(f){const k=fkey(f);return db.foods.some(x=>x.fav&&fkey(x)===k)}
+
+/* ---------- stanje ekrana ---------- */
+let ui={tab:'dnevnik',date:today(),prog:7};
+function render(){
+  document.documentElement.dataset.theme=S().theme==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):S().theme;
+  document.documentElement.style.setProperty('--acc',S().accent);
+  $('#nav').innerHTML=[['dnevnik','📒','Dnevnik'],['hrana','🥗','Namirnice'],['napredak','📈','Napredak'],['podesavanja','⚙️','Podešavanja']].map(t=>`<button data-act="tab" data-v="${t[0]}" class="${ui.tab===t[0]?'on':''}"><span>${t[1]}</span>${t[2]}</button>`).join('');
+  $('#fab').innerHTML=ui.tab==='dnevnik'?`<button data-act="scan" title="Skeniraj barkod">📷</button><button class="btn-p" data-act="add" title="Dodaj hranu">＋</button>`:'';
+  $('#gdst').textContent=gd.on?(gdBusy?'☁️ …':gd.err?'☁️ ⚠':'☁️'):'';
+  const fn={dnevnik:rDiary,hrana:rFoods,napredak:rProgress,podesavanja:rSettings}[ui.tab];
+  $('#app').innerHTML=fn()+`<footer>Atmos Ishrana ${VER} · Gemb-Bit Željko Ilić</footer>`;
+}
+
+/* ---------- DNEVNIK ---------- */
+function ringSvg(v,max,col){const R=64,C=2*Math.PI*R,p=Math.min(1,max?v/max:0);return`<svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--card2)" stroke-width="13"/><circle cx="75" cy="75" r="${R}" fill="none" stroke="${col}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}"/></svg>`}
+function macBar(lbl,v,g,col){const p=g?Math.min(100,v/g*100):0;return`<div><div class="t"><span>${lbl}</span><span>${r0(v)} / ${r0(g)} g</span></div><div class="bar"><i style="width:${p}%;background:${col}"></i></div></div>`}
+function rDiary(){
+  const d=ui.date,es=dayEntries(d),t=sumOf(es),c=calc(),g=c.g,left=g.kcal-t.kcal,over=left<0;
+  const w=db.water.find(x=>x.id===d),ml=w?w.ml:0,gl=Math.max(1,Math.round(g.water/250));
+  let h=`<div class="pnav"><button data-act="day" data-v="-1">‹</button><div class="lbl" data-act="day" data-v="0">${dlabel(d)}</div><button data-act="day" data-v="1">›</button></div>`;
+  if(!P().set)h+=`<div class="warnb">👋 Dobro došao! <b>Podesi svoj profil</b> (pol, godine, visina, težina, cilj) da izračunam koliko kalorija ti je potrebno dnevno.<div style="margin-top:8px"><button class="btn-p btn-s" data-act="tab" data-v="podesavanja">Podesi profil</button></div></div>`;
+  h+=`<div class="card"><div class="hero"><div class="ring">${ringSvg(t.kcal,g.kcal,over?'var(--bad)':'var(--acc)')}<div class="in"><b>${r0(Math.abs(left))}</b><small>${over?'kcal preko cilja':'kcal preostalo'}</small></div></div>
+    <div class="hsum"><div><span class="muted">Cilj</span><b>${r0(g.kcal)} kcal</b></div><div><span class="muted">Uneto</span><b>${r0(t.kcal)} kcal</b></div><div><span class="muted">Vlakna</span><span>${r1(t.fib)} g</span></div><div><span class="muted">Šećeri</span><span>${r1(t.sug)} g</span></div><div><span class="muted">So</span><span>${r1(t.salt)} g</span></div></div></div>
+    <div class="mac">${macBar('Proteini',t.p,g.p,'var(--p)')}${macBar('Ugljeni hidr.',t.c,g.c,'var(--c)')}${macBar('Masti',t.f,g.f,'var(--f)')}</div></div>`;
+  MEALS.forEach(([m,n,ic])=>{const me=es.filter(e=>e.meal===m),mk=me.reduce((s,e)=>s+entTot(e,'kcal'),0);
+    const y=!me.length&&db.entries.some(e=>e.date===addDays(d,-1)&&e.meal===m);
+    h+=`<div class="card meal"><h3><span>${ic} ${n}</span><span class="k">${me.length?r0(mk)+' kcal':''}</span></h3>`;
+    h+=me.map(e=>`<div class="ent" data-act="edit" data-v="${e.id}">${e.img?`<img src="${esc(e.img)}" alt="" loading="lazy">`:`<div class="ph">${e.quick?'⚡':'🍽️'}</div>`}<div class="grow"><div class="n">${esc(e.name)}</div><div class="xs muted">${e.quick?'brzi unos':esc(gramLbl(e))}${e.brand?' · '+esc(e.brand):''} · P ${r0(entTot(e,'p'))} · UH ${r0(entTot(e,'c'))} · M ${r0(entTot(e,'f'))}</div></div><div class="k">${r0(entTot(e,'kcal'))}</div></div>`).join('');
+    h+=`<div class="row wrap" style="margin-top:${me.length?8:0}px"><button class="btn-s" data-act="add" data-v="${m}">＋ Dodaj</button>${y?`<button class="btn-s btn-g" data-act="copyy" data-v="${m}">↻ Kao juče</button>`:''}</div></div>`});
+  h+=`<div class="card"><h3><span>💧 Voda</span><span class="k">${(ml/1000).toFixed(2).replace('.',',')} / ${(g.water/1000).toFixed(1).replace('.',',')} l</span></h3>
+    <div class="water">${Array.from({length:gl},(_,i)=>`<span class="${i<Math.round(ml/250)?'on':''}">💧</span>`).join('')}</div>
+    <div class="chips"><button data-act="water" data-v="250">＋ čaša 250 ml</button><button data-act="water" data-v="500">＋ 500 ml</button><button data-act="water" data-v="-250">− 250</button></div></div>`;
+  return h}
+function gramLbl(e){if(e.pc&&e.pc.g){const n=e.g/e.pc.g;if(Math.abs(n-Math.round(n))<0.01&&n>=1)return Math.round(n)+' × '+e.pc.l+' ('+r0(e.g)+' g)'}return r0(e.g)+' g'}
+
+/* ---------- NAMIRNICE ---------- */
+let fq='',fcat='moje';
+function rFoods(){
+  let h=`<div class="card"><input class="fld" id="fq" placeholder="Pretraži tablicu i svoje namirnice…" value="${esc(fq)}" data-in="fq"><div class="seg" style="margin-top:10px">${[['moje','Moje'],['fav','⭐ Omiljene'],['tab','Tablica']].map(x=>`<button data-act="fcat" data-v="${x[0]}" class="${fcat===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>
+    <div class="row" style="margin-top:10px"><button class="grow" data-act="newfood">✏️ Nova namirnica</button><button class="grow" data-act="scanfood">📷 Skeniraj</button></div></div><div id="flist">${foodsList()}</div>`;
+  return h}
+function foodsList(){const q=norm(fq);let list;
+  if(fcat==='tab'){list=BASE.filter(f=>!q||f._n.includes(q));
+    if(q)return list.map(f=>fItem(f,'fopen')).join('')||'<div class="empty">Nema rezultata</div>';
+    return Object.keys(BASE_CATS).map(c=>`<div class="sec">${BASE_CATS[c]}</div>`+list.filter(f=>f.cat===c).map(f=>fItem(f,'fopen')).join('')).join('')}
+  list=db.foods.filter(f=>(fcat==='fav'?f.fav:true)&&(!q||norm(f.name+' '+(f.brand||'')+' '+(f.code||'')).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'sr'));
+  if(!list.length)return`<div class="empty">${fcat==='fav'?'Nema omiljenih. Otvori namirnicu i dodirni ☆ da je dodaš.':'Ovde se čuvaju namirnice koje sam upišeš i proizvodi koje skeniraš ili nađeš na internetu.'}</div>`;
+  return list.map(f=>fItem(f,'fopen')).join('')}
+function fItem(f,act,extra){const k=f.per&&f.per.kcal!=null?r0(f.per.kcal):'?';
+  return`<div class="fi" data-act="${act}" data-v="${esc(f.id)}"${extra||''}>${f.img?`<img src="${esc(f.img)}" alt="" loading="lazy">`:`<div class="ph">${f.src==='base'?'🥕':f.src==='off'?'🏷️':'✏️'}</div>`}<div class="grow"><div class="n">${esc(f.name)}${f.ns&&/^[a-e]$/.test(f.ns)?`<span class="ns ns-${f.ns}">${f.ns.toUpperCase()}</span>`:''}${f.fav?' ⭐':''}</div><div class="xs muted">${f.brand?esc(f.brand)+' · ':''}P ${r1(f.per.p)} · UH ${r1(f.per.c)} · M ${r1(f.per.f)}${f.pc?' · 1 '+esc(f.pc.l)+' = '+f.pc.g+' g':''}</div></div><div class="k">${k}<div class="xs muted" style="font-weight:400">kcal/100 g</div></div></div>`}
+
+/* ---------- NAPREDAK ---------- */
+function rProgress(){const c=calc(),n=ui.prog,t=today();
+  const days=Array.from({length:n},(_,i)=>addDays(t,i-n+1)).map(d=>({d,s:sumOf(dayEntries(d)),has:db.entries.some(e=>e.date===d)}));
+  const logged=days.filter(x=>x.has),avg=k=>logged.length?logged.reduce((s,x)=>s+x.s[k],0)/logged.length:0;
+  const mx=Math.max(c.g.kcal*1.2,...days.map(x=>x.s.kcal))||1;
+  let h=`<div class="seg" style="margin-bottom:12px">${[[7,'7 dana'],[14,'14 dana'],[30,'30 dana']].map(x=>`<button data-act="prog" data-v="${x[0]}" class="${n===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>`;
+  h+=`<div class="card"><h3>🔥 Kalorije po danima</h3><div class="chart"><div class="goal" style="bottom:${c.g.kcal/mx*150}px"></div>${days.map(x=>{const hh=x.s.kcal/mx*100,dd=new Date(x.d+'T12:00:00');return`<div class="col" title="${dlabel(x.d)}: ${r0(x.s.kcal)} kcal" data-act="goday" data-v="${x.d}"><i class="${!x.has?'no':x.s.kcal>c.g.kcal*1.05?'over':''}" style="height:${x.has?hh:1}%"></i><small>${n<=14?DAYS[dd.getDay()]:(dd.getDate()%5===0?dd.getDate():'')}</small></div>`}).join('')}</div>
+    <div class="xs muted" style="margin-top:6px">Isprekidana linija = dnevni cilj (${r0(c.g.kcal)} kcal). Dodirni stub da otvoriš taj dan.</div>
+    <div class="grid g3" style="margin-top:12px"><div class="stat"><small>Prosek</small><b>${r0(avg('kcal'))}</b><small>kcal/dan</small></div><div class="stat"><small>Upisanih dana</small><b>${logged.length}/${n}</b></div><div class="stat"><small>U okviru cilja</small><b>${logged.filter(x=>x.s.kcal<=c.g.kcal*1.05).length}</b><small>dana</small></div></div></div>`;
+  const ap=avg('p'),ac=avg('c'),af=avg('f'),tk=ap*4+ac*4+af*9||1;
+  h+=`<div class="card"><h3>🥩 Prosečni makronutrijenti</h3><div class="bar" style="height:14px;display:flex"><i style="width:${ap*4/tk*100}%;background:var(--p);border-radius:0"></i><i style="width:${ac*4/tk*100}%;background:var(--c);border-radius:0"></i><i style="width:${af*9/tk*100}%;background:var(--f);border-radius:0"></i></div>
+    <div class="grid g3" style="margin-top:10px"><div class="stat"><small style="color:var(--p)">Proteini</small><b>${r0(ap)} g</b><small>${r0(ap*4/tk*100)}% · cilj ${P().mp}%</small></div><div class="stat"><small style="color:var(--c)">Ugljeni hidrati</small><b>${r0(ac)} g</b><small>${r0(ac*4/tk*100)}% · cilj ${P().mc}%</small></div><div class="stat"><small style="color:var(--f)">Masti</small><b>${r0(af)} g</b><small>${r0(af*9/tk*100)}% · cilj ${P().mf}%</small></div></div>
+    <div class="grid g3" style="margin-top:10px"><div class="stat"><small>Vlakna</small><b>${r1(avg('fib'))} g</b></div><div class="stat"><small>Šećeri</small><b>${r1(avg('sug'))} g</b></div><div class="stat"><small>So</small><b>${r1(avg('salt'))} g</b></div></div></div>`;
+  h+=weightCard(c);
+  const top={};db.entries.filter(e=>e.date>=days[0].d).forEach(e=>{const k=e.name;top[k]=(top[k]||0)+entTot(e,'kcal')});
+  const tl=Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if(tl.length)h+=`<div class="card"><h3>🍽️ Najviše kalorija je došlo iz</h3>${tl.map(([n,k])=>`<div class="row sp small" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${esc(n)}</span><b>${r0(k)} kcal</b></div>`).join('')}</div>`;
+  return h}
+function weightCard(c){const ws=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date));const last=ws[ws.length-1],first=ws[0];
+  let h=`<div class="card"><h3><span>⚖️ Težina</span><button class="btn-s btn-p" data-act="addw">＋ Upiši</button></h3>`;
+  if(ws.length>=2){const pts=ws.slice(-60),mn=Math.min(...pts.map(w=>w.kg),P().goalW||1e9)-1,mx=Math.max(...pts.map(w=>w.kg))+1,W=600,H=160;
+    const x=i=>pts.length===1?W/2:i/(pts.length-1)*(W-20)+10,y=v=>H-10-(v-mn)/(mx-mn)*(H-20);
+    h+=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${P().goalW?`<line x1="0" x2="${W}" y1="${y(P().goalW)}" y2="${y(P().goalW)}" stroke="var(--ok)" stroke-dasharray="6 6" stroke-width="2"/>`:''}<polyline fill="none" stroke="var(--acc)" stroke-width="3" stroke-linejoin="round" points="${pts.map((w,i)=>x(i)+','+y(w.kg)).join(' ')}"/>${pts.map((w,i)=>`<circle cx="${x(i)}" cy="${y(w.kg)}" r="4" fill="var(--acc)"/>`).join('')}</svg>`}
+  if(last)h+=`<div class="grid g3" style="margin-top:8px"><div class="stat"><small>Trenutno</small><b>${r1(last.kg)} kg</b></div><div class="stat"><small>Promena</small><b>${(last.kg-first.kg>0?'+':'')+r1(last.kg-first.kg)} kg</b></div><div class="stat"><small>BMI</small><b>${r1(c.bmi)}</b><small>${c.bmi<18.5?'pothranjenost':c.bmi<25?'normalno':c.bmi<30?'prekomerno':'gojaznost'}</small></div></div>`;
+  else h+=`<div class="empty">Upiši težinu da pratiš napredak.</div>`;
+  if(ws.length)h+=`<details style="margin-top:8px"><summary>Sva merenja (${ws.length})</summary>${[...ws].reverse().map(w=>`<div class="row sp small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${dlabel(w.date)}</span><span><b>${r1(w.kg)} kg</b> <button class="btn-s btn-g" data-act="delw" data-v="${w.id}">✕</button></span></div>`).join('')}</details>`;
+  return h+'</div>'}
+
+/* ---------- PODEŠAVANJA ---------- */
+function rSettings(){const p=P(),c=calc();
+  let h=`<div class="card"><h3>👤 Profil i dnevni cilj</h3>
+   <div class="grid g2"><div><label class="l">Pol</label><div class="seg"><button data-act="pset" data-k="sex" data-v="m" class="${p.sex==='m'?'on':''}">Muški</button><button data-act="pset" data-k="sex" data-v="f" class="${p.sex==='f'?'on':''}">Ženski</button></div></div>
+   <div><label class="l">Godine</label><input class="fld" type="number" inputmode="numeric" data-p="age" value="${esc(p.age)}"></div>
+   <div><label class="l">Visina (cm)</label><input class="fld" type="number" inputmode="decimal" data-p="height" value="${esc(p.height)}"></div>
+   <div><label class="l">Težina (kg)</label><input class="fld" type="number" inputmode="decimal" step="0.1" data-p="weight" value="${esc(p.weight)}"></div></div>
+   <label class="l" style="margin-top:10px">Aktivnost</label><select class="fld" data-p="act">${ACT.map(a=>`<option value="${a[0]}" ${Number(p.act)===a[0]?'selected':''}>${a[1]}</option>`).join('')}</select>
+   <label class="l" style="margin-top:10px">Cilj</label><div class="seg">${[['lose','Mršavljenje'],['keep','Održavanje'],['gain','Dobijanje']].map(x=>`<button data-act="pset" data-k="goal" data-v="${x[0]}" class="${p.goal===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>
+   ${p.goal!=='keep'?`<label class="l" style="margin-top:10px">Tempo</label><select class="fld" data-p="rate">${[0.25,0.5,0.75,1].map(r=>`<option value="${r}" ${Number(p.rate)===r?'selected':''}>${String(r).replace('.',',')} kg nedeljno${r===0.5?' (preporuka)':r===1?' (brzo)':''}</option>`).join('')}</select>`:''}
+   <div class="grid g2" style="margin-top:10px"><div><label class="l">Ciljna težina (kg)</label><input class="fld" type="number" inputmode="decimal" data-p="goalW" value="${esc(p.goalW||'')}" placeholder="nije obavezno"></div>
+   <div><label class="l">Voda dnevno (ml)</label><input class="fld" type="number" inputmode="numeric" data-p="water" value="${esc(p.water)}"></div></div>
+   <div id="pcalc">${pcalcHtml()}</div>   <label class="l" style="margin-top:12px">Ručno zadat cilj (kcal) — prazno = automatski</label><input class="fld" type="number" inputmode="numeric" data-p="kcal" value="${p.kcal>0?esc(p.kcal):''}" placeholder="automatski: ${c.auto}">
+   <label class="l" style="margin-top:12px">Raspodela makronutrijenata (%)</label>
+   <div class="chips" style="margin-bottom:8px">${[[25,45,30,'Uravnoteženo'],[30,40,30,'Više proteina'],[30,20,50,'Manje UH'],[20,55,25,'Sportska']].map(x=>`<button data-act="macro" data-v="${x.slice(0,3).join(',')}" class="${p.mp===x[0]&&p.mc===x[1]&&p.mf===x[2]?'btn-p':''}">${x[3]}</button>`).join('')}</div>
+   <div class="grid g3"><div><label class="l" style="color:var(--p)">Proteini</label><input class="fld" type="number" data-p="mp" value="${p.mp}"></div><div><label class="l" style="color:var(--c)">UH</label><input class="fld" type="number" data-p="mc" value="${p.mc}"></div><div><label class="l" style="color:var(--f)">Masti</label><input class="fld" type="number" data-p="mf" value="${p.mf}"></div></div>
+   <div id="msum">${msumHtml()}</div>
+   <div class="xs muted" style="margin-top:8px">Proračun po formuli Mifflin-St Jeor. Vrednosti su okvirne i nisu medicinski savet.</div></div>`;
+  h+=gdCard();
+  h+=`<div class="card"><h3>💾 Rezervna kopija</h3><div class="grid g2"><button data-act="export">⬇️ Napravi rezervnu kopiju</button><button data-act="import">⬆️ Vrati rezervnu kopiju</button></div>
+    <details style="margin-top:8px"><summary>Napredno</summary><div class="grid g2" style="margin-top:6px"><button data-act="csv">📄 Izvoz dnevnika (CSV / Excel)</button><button class="btn-d" data-act="wipe">🗑️ Obriši sve podatke</button></div></details></div>`;
+  h+=`<div class="card"><h3>🎨 Izgled</h3><div class="seg">${[['dark','Tamna'],['light','Svetla'],['auto','Automatski']].map(x=>`<button data-act="theme" data-v="${x[0]}" class="${S().theme===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>
+    <div class="sw" style="margin-top:12px">${ACCENTS.map(a=>`<button data-act="accent" data-v="${a}" class="${S().accent===a?'on':''}" style="background:${a}"></button>`).join('')}</div></div>`;
+  h+=`<div class="card"><h3>📲 Instalacija</h3>${instEv?`<button class="btn-p" data-act="install" style="width:100%">Instaliraj aplikaciju</button>`:matchMedia('(display-mode: standalone)').matches?'<div class="small muted">Aplikacija je instalirana ✔</div>':`<div class="small muted">Android / Windows (Chrome, Edge): meni ⋮ → <b>Instaliraj aplikaciju</b>.<br>iPhone (Safari): <b>Podeli</b> → <b>Dodaj na početni ekran</b>.</div>`}</div>`;
+  h+=`<div class="card"><h3>ℹ️ O aplikaciji</h3><div class="small muted" style="line-height:1.6">Atmos Ishrana ${VER}<br>Podaci o proizvodima: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (otvorena baza, licenca ODbL). Osnovna tablica: približne vrednosti prema USDA FoodData Central.<br>
+    <a href="privatnost.html" target="_blank" rel="noopener">Politika privatnosti</a> · <a href="uslovi.html" target="_blank" rel="noopener">Uslovi korišćenja</a><br>Podrška: <a href="mailto:vasserviserbgd@gmail.com">vasserviserbgd@gmail.com</a><br>Autor: Gemb-Bit Željko Ilić · <a href="https://gembirdt-bit.github.io/" target="_blank" rel="noopener">Sve Atmos aplikacije</a></div></div>`;
+  return h}
+
+function pcalcHtml(){const p=P(),c=calc();return`<div class="grid g3" style="margin-top:12px"><div class="stat"><small>Bazalni metab.</small><b>${r0(c.bmr)}</b><small>kcal</small></div><div class="stat"><small>Potrošnja</small><b>${r0(c.tdee)}</b><small>kcal/dan</small></div><div class="stat" style="outline:2px solid var(--acc)"><small>Tvoj cilj</small><b>${r0(c.g.kcal)}</b><small>kcal/dan</small></div></div>
+   ${c.low&&!(p.kcal>0)?`<div class="warnb" style="margin-top:10px">Izračunati cilj je bio ispod ${c.floor} kcal, pa je postavljen na ${c.floor} kcal. Za strože režime posavetuj se sa lekarom ili nutricionistom.</div>`:''}`}
+function msumHtml(){const p=P(),c=calc(),s=p.mp+p.mc+p.mf;return`<div class="xs ${s===100?'muted':''}" style="margin-top:6px;${s!==100?'color:var(--bad)':''}">Zbir: ${s}% ${s!==100?'— treba da bude 100%':''} · P ${r0(c.g.p)} g · UH ${r0(c.g.c)} g · M ${r0(c.g.f)} g</div>`}
+
+/* ---------- DIJALOG: DODAVANJE ---------- */
+let add={meal:'b',q:'',online:null,busy:false,err:''};
+function defMeal(){const h=new Date().getHours();return h<11?'b':h<16?'l':h<21?'d':'s'}
+function openAdd(meal){add={meal:meal||defMeal(),q:'',online:null,busy:false,err:''};const d=$('#dlg');d.innerHTML=addHtml();if(!d.open)d.showModal();rAddList()}
+function addHtml(){return`<div class="dh"><button class="btn-s" data-act="close">✕</button><h2>Dodaj hranu</h2></div><div class="db">
+  <div class="seg" id="addmeal">${MEALS.map(m=>`<button data-act="ameal" data-v="${m[0]}" class="${add.meal===m[0]?'on':''}">${m[2]} ${m[1]}</button>`).join('')}</div>
+  <form id="aform" class="row" style="margin-top:10px" onsubmit="return false"><input class="fld grow" id="aq" type="search" enterkeyhint="search" placeholder="Npr. jogurt, hleb, Plazma…" autocomplete="off" data-in="aq"><button class="btn-p" data-act="osearch" type="submit">🔍</button></form>
+  <div class="row" style="margin-top:10px"><button class="grow" data-act="scan">📷 Skeniraj barkod</button><button class="grow" data-act="quick">⚡ Brzi unos</button><button data-act="newfood" title="Nova namirnica">✏️</button></div>
+  <div id="alist"></div></div>`}
+function rAddList(){const el=$('#alist');if(!el)return;const q=norm(add.q);let h='';
+  if(!q){const r=recentFoods(15),fav=db.foods.filter(f=>f.fav);
+    if(fav.length)h+=`<div class="sec">⭐ Omiljene</div>`+fav.map(f=>fItem(f,'pick')).join('');
+    if(r.length)h+=`<div class="sec">🕘 Nedavno</div>`+r.map((f,i)=>fItem(Object.assign({},f,{id:'r'+i}),'pickr')).join('');
+    if(!fav.length&&!r.length)h+=`<div class="empty">Ukucaj naziv namirnice ili proizvoda, ili skeniraj barkod sa ambalaže 📷</div>`;
+    el.innerHTML=h;return}
+  const mine=db.foods.filter(f=>norm(f.name+' '+(f.brand||'')).includes(q)).slice(0,20);
+  const base=BASE.filter(f=>f._n.includes(q)).sort((a,b)=>(a._n.startsWith(q)?0:1)-(b._n.startsWith(q)?0:1)).slice(0,25);
+  const mk=new Set(mine.map(fkey)),base2=base.filter(f=>!mk.has(fkey(f)));
+  if(mine.length)h+=`<div class="sec">Moje namirnice</div>`+mine.map(f=>fItem(f,'pick')).join('');
+  if(base2.length)h+=`<div class="sec">Tablica namirnica</div>`+base2.map(f=>fItem(f,'pick')).join('');
+  h+=`<div class="sec">🌐 Proizvodi sa interneta (Open Food Facts)</div>`;
+  if(add.busy)h+=`<div class="empty"><span class="spin"></span> Tražim…</div>`;
+  else if(add.err)h+=`<div class="warnb">${esc(add.err)} <button class="btn-s" data-act="osearch">Pokušaj ponovo</button></div>`;
+  else if(add.online&&add.online.q===add.q)h+=add.online.list.length?add.online.list.map(f=>fItem(f,'picko')).join(''):`<div class="empty">Nema rezultata. Probaj drugi naziv ili skeniraj barkod.</div>`;
+  else h+=`<button style="width:100%" data-act="osearch">🔍 Traži „${esc(add.q)}“ na internetu</button>`;
+  el.innerHTML=h}
+function offTimeout(url,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||15000);return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t))}
+function mapOff(p){const n=p.nutriments||{};const g=k=>{const v=num(n[k+'_100g']);return v==null?null:v};
+  let kcal=g('energy-kcal');if(kcal==null){const kj=g('energy-kj')!=null?g('energy-kj'):g('energy');if(kj!=null)kcal=kj/4.184}
+  const per={kcal:kcal==null?null:Math.round(kcal*10)/10,p:g('proteins')||0,c:g('carbohydrates')||0,f:g('fat')||0,fib:g('fiber')||0,sug:g('sugars')||0,sat:g('saturated-fat')||0,salt:g('salt')||0};
+  if(per.kcal==null&&(per.p||per.c||per.f))per.kcal=Math.round(per.p*4+per.c*4+per.f*9);
+  const sv=num(p.serving_quantity);
+  return{id:'off:'+p.code,code:String(p.code||''),name:(p.product_name_sr||p.product_name||p.generic_name||'Proizvod '+p.code).trim(),brand:String(p.brands||'').split(',')[0].trim(),qty:p.quantity||'',per,serving:sv&&sv>0&&sv<3000?sv:null,img:p.image_front_small_url||'',ns:p.nutriscore_grade||'',src:'off',nokcal:per.kcal==null}}
+async function offSearch(){if(!add.q.trim()||add.busy)return;if(!navigator.onLine){add.err='Nema interneta.';rAddList();return}
+  add.busy=true;add.err='';rAddList();const q=add.q;
+  try{const base=OFF+'/cgi/search.pl?search_simple=1&action=process&json=1&page_size=30&sort_by=unique_scans_n&fields='+OFF_F+'&search_terms='+encodeURIComponent(q);
+    const get=async u=>((await (await offTimeout(u)).json()).products||[]).filter(p=>p.code);
+    let rs=await get(base+'&tagtype_0=countries&tag_contains_0=contains&tag_0=serbia');
+    if(rs.length<8){const w=await get(base);const s=new Set(rs.map(p=>p.code));rs=rs.concat(w.filter(p=>!s.has(p.code)))}
+    const list=rs.map(mapOff).filter(f=>!f.nokcal);add.online={q,list};}
+  catch(e){add.err=e.name==='AbortError'?'Server ne odgovara (Open Food Facts je ponekad spor).':'Pretraga nije uspela — proveri internet.'}
+  add.busy=false;if(add.q===q)rAddList()}
+
+/* ---------- DIJALOG: KOLIČINA ---------- */
+let am=null;
+function openAmount(food,opt){opt=opt||{};const e=opt.entry;
+  am={food,entry:e,meal:e?e.meal:(opt.meal||add.meal||defMeal()),g:e?e.g:(opt.g||food.serving||(food.pc&&food.pc.g)||100),date:e?e.date:ui.date};
+  const d=$('#dlg2');d.innerHTML=amHtml();if(!d.open)d.showModal();amUpd()}
+function amHtml(){const f=am.food,quick=f.quick;
+  const qb=[];if(f.pc)[1,2,3].forEach(n=>qb.push([n*f.pc.g,n+' '+f.pc.l]));if(f.serving)qb.push([f.serving,'porcija '+r0(f.serving)+' g']);[50,100,150,200].forEach(g=>{if(!qb.some(x=>x[0]===g))qb.push([g,g+' g'])});
+  return`<div class="dh"><button class="btn-s" data-act="close2">✕</button><h2>${am.entry?'Izmeni unos':'Koliko?'}</h2>${quick?'':`<button class="btn-s btn-g" data-act="fav" title="Omiljeno" style="font-size:1.2rem">${isFav(f)?'⭐':'☆'}</button>`}</div><div class="db">
+  <div class="row">${f.img?`<img src="${esc(f.img)}" style="width:64px;height:64px;border-radius:12px;object-fit:cover" alt="">`:''}<div class="grow"><div class="b" style="font-size:1.05rem">${esc(f.name)}${f.ns&&/^[a-e]$/.test(f.ns)?`<span class="ns ns-${f.ns}">${f.ns.toUpperCase()}</span>`:''}</div><div class="small muted">${[f.brand,f.qty,f.code?'EAN '+f.code:'',f.src==='base'?'tablica namirnica':f.src==='off'?'Open Food Facts':''].filter(Boolean).map(esc).join(' · ')}</div></div></div>
+  ${f.nokcal||f.per.kcal==null?`<div class="warnb" style="margin-top:10px">Za ovaj proizvod nema podataka o kalorijama. <button class="btn-s" data-act="editfood">Dopuni sa ambalaže</button></div>`:''}
+  ${quick?'':`<label class="l" style="margin-top:14px">Količina (g / ml)</label><div class="row"><button data-act="gstep" data-v="-10">−</button><input class="fld grow" id="amg" type="number" inputmode="decimal" value="${r0(am.g)===am.g?am.g:Math.round(am.g*10)/10}" data-in="amg" style="text-align:center;font-size:1.3rem;font-weight:700"><button data-act="gstep" data-v="10">＋</button></div>
+  <div class="chips" style="margin-top:8px">${qb.map(x=>`<button data-act="gset" data-v="${x[0]}">${esc(x[1])}</button>`).join('')}</div>`}
+  <label class="l" style="margin-top:14px">Obrok</label><div class="seg">${MEALS.map(m=>`<button data-act="ammeal" data-v="${m[0]}" class="${am.meal===m[0]?'on':''}">${m[2]} ${m[1]}</button>`).join('')}</div>
+  <div class="card" style="margin-top:14px"><div class="row sp"><span class="muted">Ukupno</span><span class="big" id="amk">0</span></div><table class="nut" id="amt"></table>${quick?'':`<div class="xs muted" style="margin-top:6px">Na 100 g: ${f.per.kcal==null?'?':r0(f.per.kcal)} kcal · P ${r1(f.per.p)} · UH ${r1(f.per.c)} · M ${r1(f.per.f)} g</div>`}</div>
+  <button class="btn-p" style="width:100%;padding:14px" data-act="amsave">${am.entry?'Sačuvaj izmene':'＋ Dodaj u '+MACC[am.meal]}</button>
+  ${am.entry?`<button class="btn-d" style="width:100%;margin-top:8px" data-act="amdel">🗑️ Obriši unos</button>`:''}
+  ${f.src!=='base'&&!quick?`<button class="btn-g" style="width:100%;margin-top:4px" data-act="editfood">✏️ Izmeni vrednosti namirnice</button>`:''}</div>`}
+function amUpd(){const f=am.food,g=f.quick?100:am.g;const t=k=>(Number(f.per[k])||0)*g/100;
+  const k=$('#amk');if(k)k.textContent=r0(t('kcal'))+' kcal';
+  const tb=$('#amt');if(tb)tb.innerHTML=[['p','var(--p)'],['c','var(--c)'],['f','var(--f)'],['fib'],['sug'],['sat'],['salt']].filter(([x])=>x==='p'||x==='c'||x==='f'||f.per[x]).map(([x,c])=>`<tr><td${c?` style="color:${c}"`:''}>${NL[x]}</td><td>${r1(t(x))} g</td></tr>`).join('');
+  const b=document.querySelector('[data-act=amsave]');if(b&&!am.entry)b.textContent='＋ Dodaj u '+MACC[am.meal]}
+function amSave(){const f=am.food;if(!f.quick&&!(am.g>0)){toast('Upiši količinu');return}
+  if(f.per.kcal==null){toast('Prvo dopuni kalorije');return}
+  let fid=f.id;if(f.src==='off'&&!db.foods.some(x=>x.id===f.id)){fid=upsertFood(f).id}
+  const rec={fid,name:f.name,brand:f.brand||'',code:f.code||'',per:Object.assign({},f.per),pc:f.pc||null,serving:f.serving||null,img:f.img||'',ns:f.ns||'',src:f.src,quick:!!f.quick,g:f.quick?100:Math.round(am.g*10)/10,meal:am.meal};
+  if(am.entry){Object.assign(am.entry,rec,{t:am.entry.t||Date.now()})}else db.entries.push(Object.assign({id:uid(),date:am.date,t:Date.now()},rec));
+  save();$('#dlg2').close();if($('#dlg').open)$('#dlg').close();toast(am.entry?'Sačuvano ✔':'Dodato ✔ '+r0(rec.per.kcal*rec.g/100)+' kcal');ui.tab='dnevnik';ui.date=am.date;render()}
+
+/* ---------- DIJALOG: NAMIRNICA (ručni unos) ---------- */
+let ff=null;
+function openFoodForm(f,after){f=f||{};ff={f,after};const p=f.per||{};const v=k=>p[k]==null||p[k]===0&&k!=='kcal'&&!f.id?'':String(p[k]).replace('.',',');
+  const d=$('#dlg2');d.innerHTML=`<div class="dh"><button class="btn-s" data-act="close2">✕</button><h2>${f.id&&f.src==='user'?'Izmeni namirnicu':'Nova namirnica'}</h2></div><div class="db">
+  ${f.code&&!f.id?`<div class="warnb">Proizvod sa barkodom <b>${esc(f.code)}</b> nije pronađen u bazi. Prepiši vrednosti sa ambalaže (tabela „na 100 g“) — sledeći put će ga aplikacija prepoznati odmah.</div>`:''}
+  <label class="l">Naziv *</label><input class="fld" id="ffn" value="${esc(f.name||'')}">
+  <div class="grid g2" style="margin-top:10px"><div><label class="l">Proizvođač</label><input class="fld" id="ffb" value="${esc(f.brand||'')}"></div><div><label class="l">Barkod</label><input class="fld" id="ffc" inputmode="numeric" value="${esc(f.code||'')}"></div></div>
+  <div class="sec">Na 100 g (ili 100 ml)</div>
+  <div class="grid g2"><div><label class="l">Energija (kcal) *</label><input class="fld" id="ff_kcal" inputmode="decimal" value="${v('kcal')}"></div><div><label class="l">Proteini (g)</label><input class="fld" id="ff_p" inputmode="decimal" value="${v('p')}"></div>
+  <div><label class="l">Ugljeni hidrati (g)</label><input class="fld" id="ff_c" inputmode="decimal" value="${v('c')}"></div><div><label class="l">od toga šećeri (g)</label><input class="fld" id="ff_sug" inputmode="decimal" value="${v('sug')}"></div>
+  <div><label class="l">Masti (g)</label><input class="fld" id="ff_f" inputmode="decimal" value="${v('f')}"></div><div><label class="l">od toga zasićene (g)</label><input class="fld" id="ff_sat" inputmode="decimal" value="${v('sat')}"></div>
+  <div><label class="l">Vlakna (g)</label><input class="fld" id="ff_fib" inputmode="decimal" value="${v('fib')}"></div><div><label class="l">So (g)</label><input class="fld" id="ff_salt" inputmode="decimal" value="${v('salt')}"></div></div>
+  <div class="xs muted" style="margin-top:6px">Ako na ambalaži piše samo kJ, podeli sa 4,184. Ako ne upišeš kcal, izračunaću iz proteina, UH i masti.</div>
+  <div class="grid g2" style="margin-top:10px"><div><label class="l">Porcija (g)</label><input class="fld" id="ffs" inputmode="decimal" value="${esc(f.serving||'')}" placeholder="npr. 30"></div></div>
+  <button class="btn-p" style="width:100%;padding:14px;margin-top:14px" data-act="ffsave">Sačuvaj</button>
+  ${f.id&&f.src==='user'||f.id&&db.foods.some(x=>x.id===f.id)?`<button class="btn-d" style="width:100%;margin-top:8px" data-act="ffdel">🗑️ Obriši namirnicu</button>`:''}</div>`;
+  if(!d.open)d.showModal();setTimeout(()=>{const i=$(f.name?'#ff_kcal':'#ffn');if(i&&!f.name)i.focus()},50)}
+function ffSave(){const name=$('#ffn').value.trim();if(!name){toast('Upiši naziv');return}
+  const per={};NK.forEach(k=>{per[k]=num($('#ff_'+k).value)});['p','c','f','fib','sug','sat','salt'].forEach(k=>{if(per[k]==null)per[k]=0});
+  if(per.kcal==null){if(per.p||per.c||per.f)per.kcal=Math.round(per.p*4+per.c*4+per.f*9);else{toast('Upiši kalorije');return}}
+  const old=ff.f,exist=old.id&&db.foods.find(x=>x.id===old.id);
+  const rec=upsertFood({id:exist?old.id:'',name,brand:$('#ffb').value.trim(),code:$('#ffc').value.replace(/\D/g,''),per,serving:num($('#ffs').value),pc:old.pc||null,img:old.img||'',ns:old.ns||'',src:'user'});
+  save();toast('Namirnica sačuvana ✔');
+  if(ff.after==='amount'&&am&&am.entry&&$('#dlg2').open)openAmount(rec,{entry:am.entry,keepPer:false});
+  else if(ff.after==='amount'||$('#dlg').open)openAmount(rec,{meal:add.meal||defMeal()});else{$('#dlg2').close();render()}}
+
+/* ---------- SKENER ---------- */
+let sc={stream:null,timer:null,reader:null,done:false,meal:null,torch:false,mode:'add'};
+function eanOk(c){if(!/^\d{8}$|^\d{12,14}$/.test(c))return false;const d=c.split('').map(Number),chk=d.pop();let s=0;d.reverse().forEach((x,i)=>s+=x*(i%2===0?3:1));return(10-s%10)%10===chk}
+async function openScan(mode){sc.mode=mode||'add';sc.done=false;sc.meal=add.meal||defMeal();const d=$('#dlg2');
+  d.innerHTML=`<div class="dh"><button class="btn-s" data-act="closescan">✕</button><h2>Skeniraj barkod</h2><button class="btn-s" data-act="torch" id="torchb" hidden>🔦</button></div><div class="db">
+   <div class="scanbox"><video id="scanv" playsinline muted autoplay></video><div class="aim"></div><div class="ln"></div></div>
+   <div class="small muted" id="scmsg" style="text-align:center;margin:10px 0"><span class="spin"></span> Pokrećem kameru…</div>
+   <form class="row" onsubmit="return false"><input class="fld grow" id="scman" inputmode="numeric" placeholder="ili upiši broj barkoda"><button class="btn-p" data-act="scanman" type="submit">Traži</button></form>
+   <button style="width:100%;margin-top:10px" data-act="scanimg">🖼️ Učitaj sliku barkoda</button></div>`;
+  if(!d.open)d.showModal();
+  try{await startCam()}catch(e){$('#scmsg').innerHTML='⚠ Kamera nije dostupna'+(e&&e.name==='NotAllowedError'?' — dozvoli pristup kameri u pregledaču.':'.')+' Možeš da upišeš broj barkoda ili učitaš sliku.'}}
+async function startCam(){const v=$('#scanv');const cons={video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false};
+  if('BarcodeDetector' in window){let fm=[];try{fm=await BarcodeDetector.getSupportedFormats()}catch{}
+    const want=['ean_13','ean_8','upc_a','upc_e'].filter(x=>fm.includes(x));
+    if(want.length){sc.stream=await navigator.mediaDevices.getUserMedia(cons);v.srcObject=sc.stream;await v.play().catch(()=>{});scReady();
+      const det=new BarcodeDetector({formats:want});
+      const loop=async()=>{if(sc.done||!sc.stream)return;try{if(v.readyState>=2){const r=await det.detect(v);for(const b of r){if(onCode(b.rawValue))return}}}catch{}sc.timer=setTimeout(loop,120)};loop();return}}
+  await loadZx();const Z=window.ZXing,h=new Map();h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);h.set(Z.DecodeHintType.TRY_HARDER,true);
+  sc.reader=new Z.BrowserMultiFormatReader(h,150);
+  await sc.reader.decodeFromConstraints(cons,v,(res)=>{if(res&&!sc.done)onCode(res.getText())});sc.stream=v.srcObject;scReady()}
+function scReady(){const m=$('#scmsg');if(m)m.textContent='Usmeri kameru na barkod (crtice) na ambalaži';
+  try{const tr=sc.stream&&sc.stream.getVideoTracks()[0],cap=tr&&tr.getCapabilities&&tr.getCapabilities();if(cap&&cap.torch)$('#torchb').hidden=false}catch{}}
+function loadZx(){if(window.ZXing)return Promise.resolve();const srcs=['https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js','https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'];
+  return srcs.reduce((p,src)=>p.catch(()=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=()=>window.ZXing?res():rej();s.onerror=rej;document.head.appendChild(s)})),Promise.reject()).catch(()=>{throw new Error('Biblioteka za skeniranje nije učitana (internet?)')})}
+function stopScan(){sc.done=true;clearTimeout(sc.timer);try{sc.reader&&sc.reader.reset()}catch{}sc.reader=null;try{sc.stream&&sc.stream.getTracks().forEach(t=>t.stop())}catch{}sc.stream=null;sc.torch=false}
+function onCode(code){code=String(code||'').trim();if(!eanOk(code))return false;if(sc.done)return true;stopScan();try{navigator.vibrate&&navigator.vibrate(80)}catch{}lookup(code);return true}
+async function scanImage(file){if(!file)return;const m=$('#scmsg');if(m)m.innerHTML='<span class="spin"></span> Čitam sliku…';
+  try{let code=null;
+    if('BarcodeDetector' in window){try{const bmp=await createImageBitmap(file);const r=await new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']}).detect(bmp);code=r[0]&&r[0].rawValue}catch{}}
+    if(!code){await loadZx();const url=URL.createObjectURL(file);try{const r=await new ZXing.BrowserMultiFormatReader().decodeFromImageUrl(url);code=r.getText()}catch{}URL.revokeObjectURL(url)}
+    if(code&&eanOk(code)){stopScan();lookup(code)}else if(m)m.textContent='Barkod nije pronađen na slici — probaj oštriju sliku izbliza.'}
+  catch(e){if(m)m.textContent='⚠ '+e.message}}
+async function lookup(code){const m=$('#scmsg');if(m)m.innerHTML=`<span class="spin"></span> Tražim proizvod ${esc(code)}…`;
+  const v=$('#scanv');if(v)v.pause&&v.pause();
+  const local=db.foods.find(f=>f.code===code)||(()=>{const e=[...db.entries].reverse().find(e=>e.code===code);return e&&foodFromEntry(e)})();
+  if(local&&local.per&&local.per.kcal!=null){done(local);return}
+  if(!navigator.onLine){toast('Nema interneta — upiši vrednosti ručno');openFoodForm({code},'amount');return}
+  try{const r=await offTimeout(OFF+'/api/v2/product/'+code+'.json?fields='+OFF_F,12000);const j=await r.json();
+    if(j&&j.status===1&&j.product){const f=mapOff(Object.assign({code},j.product));
+      if(f.nokcal){toast('Proizvod nađen, ali bez kalorija — dopuni');openFoodForm(Object.assign({},f,{id:''}),'amount');return}
+      done(f);return}
+    toast('Proizvod nije u bazi');openFoodForm({code},'amount')}
+  catch(e){toast('Pretraga nije uspela — upiši ručno');openFoodForm({code},'amount')}
+  function done(f){if(sc.mode==='food'){const r=upsertFood(f);save();$('#dlg2').close();fcat='moje';render();openAmountView(r)}else openAmount(f,{meal:sc.meal})}}
+function openAmountView(f){openAmount(f,{meal:defMeal()})}
+
+/* ---------- akcije ---------- */
+document.addEventListener('click',async ev=>{const el=ev.target.closest('[data-act]');if(!el)return;const a=el.dataset.act,v=el.dataset.v;
+  switch(a){
+  case'tab':ui.tab=v;window.scrollTo(0,0);render();break;
+  case'day':ui.date=v==='0'?today():addDays(ui.date,Number(v));render();break;
+  case'goday':ui.date=v;ui.tab='dnevnik';render();window.scrollTo(0,0);break;
+  case'add':openAdd(v);break;
+  case'scan':if(!$('#dlg').open)add.meal=defMeal();openScan('add');break;
+  case'scanfood':openScan('food');break;
+  case'close':$('#dlg').close();break;
+  case'close2':$('#dlg2').close();break;
+  case'closescan':stopScan();$('#dlg2').close();break;
+  case'torch':try{const tr=sc.stream.getVideoTracks()[0];sc.torch=!sc.torch;await tr.applyConstraints({advanced:[{torch:sc.torch}]})}catch{}break;
+  case'scanman':{const c=$('#scman').value.replace(/\D/g,'');if(!c){toast('Upiši broj barkoda');break}stopScan();lookup(c);break}
+  case'scanimg':$('#imgIn').click();break;
+  case'ameal':add.meal=v;document.querySelectorAll('#addmeal button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));break;
+  case'osearch':add.q=($('#aq')||{}).value||add.q;offSearch();break;
+  case'pick':{const f=findFood(v);if(f)openAmount(f,{meal:add.meal});break}
+  case'pickr':{const f=recentFoods(15)[Number(v.slice(1))];if(f)openAmount(f,{meal:add.meal,g:f._g});break}
+  case'picko':{const f=add.online&&add.online.list.find(x=>x.id===v);if(f)openAmount(f,{meal:add.meal});break}
+  case'fopen':{const f=findFood(v);if(f)openAmount(f,{meal:defMeal()});break}
+  case'edit':{const e=db.entries.find(x=>x.id===v);if(e)openAmount(foodFromEntry(e),{entry:e});break}
+  case'quick':openQuick();break;
+  case'qsave':qSave();break;
+  case'gstep':am.g=Math.max(0,(Number(am.g)||0)+Number(v));$('#amg').value=am.g;amUpd();break;
+  case'gset':am.g=Number(v);$('#amg').value=am.g;amUpd();break;
+  case'ammeal':am.meal=v;el.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el));amUpd();break;
+  case'amsave':amSave();break;
+  case'amdel':if(confirm('Obrisati ovaj unos?')){db.entries=db.entries.filter(x=>x!==am.entry);save();$('#dlg2').close();render();toast('Obrisano')}break;
+  case'fav':{const f=am.food,k=fkey(f),ex=db.foods.find(x=>fkey(x)===k);if(ex)ex.fav=!ex.fav;else upsertFood(Object.assign({},f,{id:'',fav:true,src:f.src==='base'?'base':f.src}));save();el.textContent=isFav(f)?'⭐':'☆';toast(isFav(f)?'Dodato u omiljene':'Uklonjeno iz omiljenih');if(!$('#dlg').open)render();else rAddList();break}
+  case'editfood':{const f=am.food;const ex=db.foods.find(x=>fkey(x)===fkey(f));openFoodForm(ex||Object.assign({},f,{id:''}),'amount');break}
+  case'newfood':openFoodForm({name:($('#dlg').open&&add.q)||''},$('#dlg').open?'amount':'');break;
+  case'ffsave':ffSave();break;
+  case'ffdel':if(confirm('Obrisati namirnicu? Unosi u dnevniku ostaju.')){db.foods=db.foods.filter(x=>x.id!==ff.f.id);save();$('#dlg2').close();render();toast('Obrisano')}break;
+  case'fcat':fcat=v;render();break;
+  case'copyy':{const y=db.entries.filter(e=>e.date===addDays(ui.date,-1)&&e.meal===v);y.forEach(e=>db.entries.push(Object.assign({},e,{id:uid(),date:ui.date,t:Date.now()})));save();render();toast('Kopirano '+y.length+' stavki');break}
+  case'water':{let w=db.water.find(x=>x.id===ui.date);if(!w){w={id:ui.date,date:ui.date,ml:0};db.water.push(w)}w.ml=Math.max(0,w.ml+Number(v));save();render();break}
+  case'prog':ui.prog=Number(v);render();break;
+  case'addw':openWeight();break;
+  case'wsave':{const kg=num($('#wkg').value),d=$('#wd').value||today();if(!kg||kg<20||kg>400){toast('Upiši težinu');break}
+    const ex=db.weights.find(w=>w.date===d);if(ex)ex.kg=kg;else db.weights.push({id:uid(),date:d,kg});
+    const last=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date)).pop();if(last)P().weight=last.kg;save();$('#dlg2').close();render();toast('Sačuvano ✔');break}
+  case'delw':if(confirm('Obrisati merenje?')){db.weights=db.weights.filter(w=>w.id!==v);save();render()}break;
+  case'pset':P()[el.dataset.k]=v;P().set=true;save();render();break;
+  case'macro':{const[p,c,f]=v.split(',').map(Number);Object.assign(P(),{mp:p,mc:c,mf:f});save();render();break}
+  case'theme':S().theme=v;save();render();break;
+  case'accent':S().accent=v;save();render();break;
+  case'install':if(instEv){instEv.prompt();instEv.userChoice.finally(()=>{instEv=null;render()})}break;
+  case'export':doExport();break;
+  case'import':$('#fileIn').click();break;
+  case'csv':doCsv();break;
+  case'wipe':if(confirm('Obrisati SVE podatke sa ovog uređaja? (Napravi rezervnu kopiju pre toga!)')&&confirm('Sigurno?')){const gs=gd.on;
+    if(gs){clearTimeout(gdT);gd={on:false,fileId:'',h:{},last:0,err:'',email:''};gdStore()}db=fresh();save();render();toast(gs?'Obrisano. Veza sa Drive-om je prekinuta, podaci na Drive-u ostaju.':'Svi podaci su obrisani')}break;
+  case'gdconnect':gdConnect();break;
+  case'gdsync':gdSync(true);break;
+  case'gddis':gdDisconnect();break;
+  }});
+document.addEventListener('input',ev=>{const t=ev.target;
+  if(t.dataset.in==='aq'){add.q=t.value;clearTimeout(rAddList.t);rAddList.t=setTimeout(rAddList,150)}
+  else if(t.dataset.in==='fq'){fq=t.value;$('#flist').innerHTML=foodsList()}
+  else if(t.dataset.in==='amg'){am.g=num(t.value)||0;amUpd()}
+  else if(t.dataset.p){const k=t.dataset.p;let v=t.value;
+    if(['age','height','weight','water','kcal','mp','mc','mf','goalW'].includes(k))v=num(v);else v=Number(v);
+    if(['mp','mc','mf'].includes(k))v=Math.max(0,Math.min(100,Math.round(v||0)));
+    if(k==='goalW'&&!v)v=null;if(k==='kcal'&&!v)v=0;
+    P()[k]=v;P().set=true;save();if(t.tagName!=='SELECT'){const a=$('#pcalc'),b=$('#msum');if(a)a.innerHTML=pcalcHtml();if(b)b.innerHTML=msumHtml()}}});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.p&&t.tagName==='SELECT')render()});
+document.addEventListener('submit',ev=>ev.preventDefault());
+$('#dlg2').addEventListener('close',()=>{if(sc.stream||sc.reader)stopScan()});
+$('#dlg2').addEventListener('cancel',()=>stopScan());
+$('#imgIn').addEventListener('change',ev=>{scanImage(ev.target.files[0]);ev.target.value=''});
+$('#fileIn').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
+  try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.entries))throw 0;
+    if(!confirm('Vratiti podatke iz kopije? Trenutni podaci na uređaju biće zamenjeni.'))return;
+    const st=db.settings;db=normDb(j);db.settings=Object.assign(db.settings,st);save();render();toast('Podaci vraćeni ✔ ('+db.entries.length+' unosa)')}
+  catch{toast('⚠ Fajl nije ispravna kopija Atmos Ishrane')}});
+
+function openQuick(){const d=$('#dlg2');d.innerHTML=`<div class="dh"><button class="btn-s" data-act="close2">✕</button><h2>⚡ Brzi unos</h2></div><div class="db">
+  <div class="small muted" style="margin-bottom:10px">Kad znaš samo kalorije (npr. obrok u restoranu).</div>
+  <label class="l">Opis</label><input class="fld" id="qn" placeholder="npr. Ručak u restoranu">
+  <div class="grid g2" style="margin-top:10px"><div><label class="l">Kalorije (kcal) *</label><input class="fld" id="qk" inputmode="decimal"></div><div><label class="l">Proteini (g)</label><input class="fld" id="qp" inputmode="decimal"></div><div><label class="l">Ugljeni hidrati (g)</label><input class="fld" id="qc" inputmode="decimal"></div><div><label class="l">Masti (g)</label><input class="fld" id="qf" inputmode="decimal"></div></div>
+  <label class="l" style="margin-top:10px">Obrok</label><div class="seg">${MEALS.map(m=>`<button data-act="ameal2" data-v="${m[0]}" class="${add.meal===m[0]?'on':''}" onclick="add.meal='${m[0]}';this.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===this))">${m[2]} ${m[1]}</button>`).join('')}</div>
+  <button class="btn-p" style="width:100%;padding:14px;margin-top:14px" data-act="qsave">＋ Dodaj</button></div>`;if(!d.open)d.showModal();setTimeout(()=>$('#qk').focus(),50)}
+function qSave(){const k=num($('#qk').value);if(!(k>0)){toast('Upiši kalorije');return}
+  db.entries.push({id:uid(),date:ui.date,t:Date.now(),meal:add.meal,quick:true,name:$('#qn').value.trim()||'Brzi unos',brand:'',code:'',g:100,src:'user',per:{kcal:k,p:num($('#qp').value)||0,c:num($('#qc').value)||0,f:num($('#qf').value)||0,fib:0,sug:0,sat:0,salt:0}});
+  save();$('#dlg2').close();if($('#dlg').open)$('#dlg').close();ui.tab='dnevnik';render();toast('Dodato ✔')}
+function openWeight(){const d=$('#dlg2'),last=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date)).pop();d.innerHTML=`<div class="dh"><button class="btn-s" data-act="close2">✕</button><h2>⚖️ Upiši težinu</h2></div><div class="db">
+  <label class="l">Težina (kg)</label><input class="fld" id="wkg" inputmode="decimal" value="${last?String(last.kg).replace('.',','):esc(P().weight||'')}" style="font-size:1.4rem;text-align:center;font-weight:700">
+  <label class="l" style="margin-top:10px">Datum</label><input class="fld" id="wd" type="date" value="${today()}" max="${today()}">
+  <button class="btn-p" style="width:100%;padding:14px;margin-top:14px" data-act="wsave">Sačuvaj</button></div>`;d.showModal()}
+
+/* ---------- rezervna kopija ---------- */
+function dl(name,txt,type){const b=new Blob([txt],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
+async function doExport(){const txt=JSON.stringify(Object.assign({app:'Atmos Ishrana',ver:VER,exported:new Date().toISOString()},db),null,1),name='atmos-ishrana-'+today()+'.json';
+  try{const file=new File([txt],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})&&/Android|iPhone|iPad/i.test(navigator.userAgent)){await navigator.share({files:[file],title:'Atmos Ishrana — rezervna kopija'});return}}catch(e){if(e&&e.name==='AbortError')return}
+  dl(name,txt,'application/json');toast('Rezervna kopija preuzeta ✔')}
+function doCsv(){const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"',f=x=>String(Math.round(x*10)/10).replace('.',',');
+  const rows=[['Datum','Obrok','Namirnica','Proizvođač','Količina (g)','kcal','Proteini (g)','UH (g)','Masti (g)','Vlakna (g)','Šećeri (g)','So (g)'].map(q).join(';')];
+  [...db.entries].sort((a,b)=>a.date.localeCompare(b.date)||'blds'.indexOf(a.meal)-'blds'.indexOf(b.meal)).forEach(e=>rows.push([e.date,MEAL[e.meal]?MEAL[e.meal][1]:'',e.name,e.brand,e.quick?'':f(e.g),f(entTot(e,'kcal')),f(entTot(e,'p')),f(entTot(e,'c')),f(entTot(e,'f')),f(entTot(e,'fib')),f(entTot(e,'sug')),f(entTot(e,'salt'))].map(q).join(';')));
+  dl('atmos-ishrana-dnevnik-'+today()+'.csv','﻿'+rows.join('\r\n'),'text/csv;charset=utf-8')}
+
+/* ---------- GOOGLE DRIVE SINHRONIZACIJA ----------
+   Podaci se čuvaju u fajlu „Atmos Ishrana — podaci.json“ na Google Drive-u korisnika (dozvola drive.file:
+   aplikacija vidi samo fajlove koje je sama napravila). Svi uređaji prijavljeni istim Google nalogom dele podatke.
+   Ako isti zapis menjaju dva uređaja, važi kasnija izmena. */
+const GD_CLIENT='867108184410-ctavf0871su36rju6n465rd0149ps2mu.apps.googleusercontent.com';
+const GD_SCOPE='https://www.googleapis.com/auth/drive.file',GD_NAME='Atmos Ishrana — podaci.json',GD_KEY='atmosIshrana1_gdrive';
+const GD_COLLS=['entries','foods','weights','water'];
+let gd=(()=>{try{const x=JSON.parse(localStorage.getItem(GD_KEY));if(x&&x.h)return x}catch{}return{on:false,fileId:'',h:{},last:0,err:'',email:''}})();
+let gdTok=(()=>{try{const t=JSON.parse(sessionStorage.getItem(GD_KEY+'_t'));if(t&&t.exp>Date.now()+60000)return t}catch{}return null})();
+let gdClient=null,gdBusy=false,gdT=null,gdWait=null;
+const gdStore=()=>{try{localStorage.setItem(GD_KEY,JSON.stringify(gd))}catch{}};
+const gdValid=()=>!!(gdTok&&gdTok.exp>Date.now()+60000);
+function gdHash(o){const t=JSON.stringify(o);let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)+t.length.toString(36)}
+function gdLocal(){const m={};GD_COLLS.forEach(c=>(db[c]||[]).forEach(r=>{if(r&&r.id)m[c+'/'+r.id]=r}));if(P().set)m._prof=P();return m}
+function gdLoadLib(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();
+  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=()=>res();s.onerror=()=>rej(new Error('Google biblioteka nije učitana (internet?)'));document.head.appendChild(s)})}
+async function gdAuth(consent){await gdLoadLib();
+  return new Promise((res,rej)=>{
+    if(!gdClient)gdClient=google.accounts.oauth2.initTokenClient({client_id:GD_CLIENT,scope:GD_SCOPE,callback:()=>{},error_callback:()=>{}});
+    gdClient.callback=r=>{if(r&&r.access_token){gdTok={t:r.access_token,exp:Date.now()+(Number(r.expires_in)||3600)*1000};try{sessionStorage.setItem(GD_KEY+'_t',JSON.stringify(gdTok))}catch{}res()}else rej(new Error((r&&r.error)||'Dozvola nije data'))};
+    gdClient.error_callback=e=>rej(new Error(e&&e.type==='popup_closed'?'Prozor za prijavu je zatvoren':'Prijava na Google nije uspela'));
+    gdClient.requestAccessToken({prompt:consent?'consent':'',hint:gd.email||undefined})})}
+async function gdApi(url,opt){const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+gdTok.t},(opt&&opt.headers)||{})}));
+  if(r.status===401){gdTok=null;try{sessionStorage.removeItem(GD_KEY+'_t')}catch{}throw new Error('auth')}
+  if(!r.ok)throw new Error('Drive greška '+r.status);return r}
+async function gdFindFile(){
+  if(gd.fileId){try{const j=await (await gdApi('https://www.googleapis.com/drive/v3/files/'+gd.fileId+'?fields=id,trashed')).json();if(!j.trashed)return gd.fileId}catch(e){if(e.message==='auth')throw e}gd.fileId=''}
+  const q=encodeURIComponent("name='"+GD_NAME.replace(/'/g,"\\'")+"' and trashed=false");
+  const j=await (await gdApi('https://www.googleapis.com/drive/v3/files?spaces=drive&orderBy=modifiedTime desc&fields=files(id)&q='+q)).json();
+  gd.fileId=(j.files&&j.files[0]&&j.files[0].id)||'';return gd.fileId}
+async function gdUpload(body){const txt=JSON.stringify(body);
+  if(gd.fileId){await gdApi('https://www.googleapis.com/upload/drive/v3/files/'+gd.fileId+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:txt});return}
+  const b='atmosishrana'+Date.now(),meta={name:GD_NAME,mimeType:'application/json',description:'Podaci aplikacije Atmos Ishrana. Ne menjaj ručno.'};
+  const r=await gdApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},
+    body:'--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+txt+'\r\n--'+b+'--'});
+  gd.fileId=(await r.json()).id}
+function gdSoon(ms){if(!gd.on||!GD_CLIENT)return;clearTimeout(gdT);gdT=setTimeout(()=>{if(gdValid())gdSync()},ms==null?5000:ms)}
+async function gdSync(manual){
+  if(!GD_CLIENT||!gd.on||gdBusy)return;
+  if(!navigator.onLine){gd.err='Nema interneta — izmene čekaju';gdStore();if(manual)toast(gd.err);return}
+  if(document.querySelector('dialog[open]')&&!manual){gdSoon(20000);return}
+  gdBusy=true;if(manual)render();let redraw=!!manual,retry=false;
+  try{
+    if(!gdValid()){if(!manual){gd.err='Potrebna je potvrda — dodirni „Sinhronizuj“';gdStore();return}await gdAuth(false)}
+    const ver=async()=>gd.fileId?Number((await (await gdApi('https://www.googleapis.com/drive/v3/files/'+gd.fileId+'?fields=version')).json()).version)||0:0;
+    let remote={recs:{}},v0=0;
+    if(await gdFindFile()){v0=await ver();try{remote=await (await gdApi('https://www.googleapis.com/drive/v3/files/'+gd.fileId+'?alt=media')).json()}catch(e){if(e.message==='auth')throw e;remote={recs:{}}}}
+    const R=remote.recs||{},loc=gdLocal(),now=Date.now(),out=Object.assign({},R);let got=0,sent=0;
+    const mine={};Object.keys(loc).forEach(k=>{const h=gdHash(loc[k]);if(gd.h[k]!==h||!(k in R))mine[k]=loc[k]});
+    Object.keys(gd.h).forEach(k=>{if(!(k in loc))mine[k]=null});
+    Object.keys(R).forEach(k=>{
+      const rv=R[k]&&R[k].d!==undefined?R[k].d:null,rh=rv?gdHash(rv):null;
+      if(k in mine)return;if(rh===(gd.h[k]||null))return;
+      if(k==='_prof'){if(rv){db.profile=Object.assign(freshProfile(),rv);gd.h[k]=gdHash(db.profile);got++}return}
+      const[c,id]=k.split('/');if(!GD_COLLS.includes(c))return;
+      const i=db[c].findIndex(x=>x.id===id);
+      if(rv){if(i>=0)db[c][i]=rv;else db[c].push(rv);gd.h[k]=rh}else{if(i>=0)db[c].splice(i,1);delete gd.h[k]}
+      got++});
+    Object.keys(mine).forEach(k=>{out[k]={t:now,d:mine[k]};sent++;if(mine[k])gd.h[k]=gdHash(mine[k]);else delete gd.h[k]});
+    if(gd.fileId&&sent&&(await ver())!==v0){if((gdSync.retry=(gdSync.retry||0)+1)<=3){retry=true;gdBusy=false;setTimeout(()=>gdSync(manual),300+Math.random()*700);return}}
+    gdSync.retry=0;
+    if(sent||!gd.fileId)await gdUpload({app:'Atmos Ishrana',v:1,t:new Date().toISOString(),recs:out});
+    if(got){try{localStorage.setItem(KEY,JSON.stringify(db))}catch{}}
+    gd.last=Date.now();gd.err='';gdStore();
+    if(manual)toast(got?'Sinhronizovano ✔ — stiglo izmena: '+got:'Sinhronizovano ✔');
+    if(got)redraw=true;
+  }catch(e){gd.err=e.message==='auth'?'Potrebna je potvrda — dodirni „Sinhronizuj“':String(e.message||'Greška');gdStore();if(manual)toast('⚠ '+gd.err)}
+  finally{if(!retry){gdBusy=false;gdRender(redraw)}}}
+function gdRender(full){const a=document.activeElement;if(document.querySelector('dialog[open]')||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){clearTimeout(gdWait);gdWait=setTimeout(()=>gdRender(full),1500);return}if(full||ui.tab==='podesavanja')render();else $('#gdst').textContent=gd.on?(gd.err?'☁️ ⚠':'☁️'):''}
+async function gdConnect(){
+  try{await gdAuth(true);
+    try{const u=await (await gdApi('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)')).json();gd.email=(u.user&&u.user.emailAddress)||''}catch{}
+    gd.on=true;gd.h={};gd.fileId='';
+    gdStore();toast('Google Drive povezan ✔');await gdSync(true)}
+  catch(e){toast('⚠ '+(e.message||'Povezivanje nije uspelo'))}}
+function gdDisconnect(){
+  if(!confirm('Prekinuti sinhronizaciju sa Google Drive-om? Podaci ostaju i na uređaju i na Drive-u.'))return;
+  try{if(gdTok&&window.google&&google.accounts)google.accounts.oauth2.revoke(gdTok.t,()=>{})}catch{}
+  gdTok=null;try{sessionStorage.removeItem(GD_KEY+'_t')}catch{}
+  gd={on:false,fileId:'',h:{},last:0,err:'',email:''};gdStore();render();toast('Veza sa Google Drive-om je prekinuta')}
+function gdCard(){
+  if(!gd.on)return`<div class="card"><h3>☁️ Google Drive</h3><div class="small muted" style="margin-bottom:10px">Čuvaj podatke na svom Google Drive-u i koristi ih na više uređaja (telefon, tablet, računar). Aplikacija vidi samo svoj fajl „${esc(GD_NAME)}“, ništa drugo sa tvog Drive-a.</div>
+    <button class="btn-p" data-act="gdconnect" style="width:100%">☁️ Poveži Google Drive</button></div>`;
+  const t=gd.last?new Date(gd.last):null;
+  return`<div class="card"><h3>☁️ Google Drive <span class="badge" style="color:var(--ok)">povezano</span></h3>
+    <div class="small muted">${gd.email?esc(gd.email)+'<br>':''}${t?'Poslednja sinhronizacija: '+dlabel(ds(t))+' u '+pad(t.getHours())+':'+pad(t.getMinutes()):'Još nije sinhronizovano'}</div>
+    ${gd.err?`<div class="warnb" style="margin:8px 0 0">${esc(gd.err)}</div>`:''}
+    <div class="grid g2" style="margin-top:10px"><button class="btn-p" data-act="gdsync" ${gdBusy?'disabled':''}>${gdBusy?'<span class="spin"></span>':'🔄'} Sinhronizuj</button><button data-act="gddis">Prekini vezu</button></div></div>`}
+setInterval(()=>{if(gd.on&&gdValid())gdSync()},5*60000);
+let lastDay=today();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;const t=today();
+  if(t!==lastDay){if(ui.date===lastDay)ui.date=t;lastDay=t;if(!document.querySelector('dialog[open]'))render()}gdSoon(1500)});
+addEventListener('online',()=>gdSoon(1000));
+
+/* ---------- instalacija / service worker ---------- */
+let instEv=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();instEv=e;if(ui.tab==='podesavanja')render()});
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(reg=>{
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)toast('Nova verzija je spremna — ponovo otvori aplikaciju')})})}).catch(()=>{}));
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(S().theme==='auto')render()});
+render();
+if(gd.on&&gdValid())gdSoon(800);
+if(/[?&]scan=1/.test(location.search)){history.replaceState(null,'','index.html');setTimeout(()=>{add.meal=defMeal();openScan('add')},300)}
+</script>
+</body>
+</html>
