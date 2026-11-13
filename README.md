@@ -9,18 +9,18 @@
 - **Dnevnik** — doručak, ručak, večera i užine; preostale kalorije, proteini, ugljeni hidrati, masti, vlakna, šećeri i so; „Kao juče“ za ponavljanje obroka
 - **Skeniranje barkoda** 📷 — kamera prepoznaje EAN-13 / EAN-8 / UPC kod, a podaci o proizvodu (kalorije i nutrijenti na 100 g, porcija, Nutri-Score) stižu iz otvorene baze [Open Food Facts](https://world.openfoodfacts.org). Ako proizvod nije u bazi, prepišeš vrednosti sa ambalaže i aplikacija ga sledeći put prepoznaje odmah. Može i ručni unos broja ili slika barkoda.
 - **Pretraga proizvoda na internetu** — Open Food Facts, prvo proizvodi iz Srbije
-- **Tablica namirnica** — oko 180 osnovnih namirnica i jela (hleb, meso, mlečni proizvodi, voće, povrće, gotova jela…), radi i bez interneta; komadi i porcije (1 jaje, 1 kriška, 1 kašika…)
+- **Tablica namirnica** — oko 350 namirnica i jela sa domaćeg tržišta (hleb i pecivo, meso i suhomesnato, domaći sirevi, voće, povrće, Plazma, Eurokrem, Smoki, domaća jela…), radi i bez interneta; komadi i porcije (1 jaje, 1 kriška, 1 kašika…)
 - **Moji recepti** 📖 — složi jelo od sastojaka, upiši broj porcija (i po želji težinu gotovog jela) i dodaj porciju jednim dodirom; recepti su lični — čuvaju se na tvom uređaju i na tvom Google Drive-u
 - **Šabloni obroka** 📋 — sačuvaj obrok koji često jedeš i dodaj ga ceo odjednom; „Ponovi ceo jučerašnji dan“
 - **Moje namirnice i omiljene** ⭐, nedavno korišćeno, **brzi unos** samo kalorija (može i da se izmeni)
-- **Očitavanje tabele sa pakovanja** 📷 — slikaj „Nutritivne vrednosti“ i aplikacija upiše kalorije i nutrijente
+- **Očitavanje tabele sa pakovanja** 📷 — slikaj „Nutritivne vrednosti“, označi tabelu prstom i aplikacija upiše kalorije i nutrijente (latinica, ćirilica i mešano, više jezika)
 - **Fizička aktivnost** 🏃 — šetnja, trčanje, bicikl, teretana…; potrošene kalorije se po želji dodaju dnevnom cilju
 - **Post 16:8** ⏱️ — tajmer isprekidanog posta (12–20 h)
 - **Podsetnici** 🔔 — za obroke koje još nisi upisao i za vodu
 - **Dnevni cilj** — računa se iz pola, godina, visine, težine, aktivnosti i cilja (mršavljenje / održavanje / dobijanje, formula Mifflin-St Jeor); raspodela makronutrijenata po izboru; može i ručno
 - **Voda** 💧 i **težina** ⚖️ sa grafikonom i BMI
 - **Napredak** — kalorije po danima (7 / 14 / 30 dana), prosečni makronutrijenti, odakle je došlo najviše kalorija; **izveštaj za deljenje** (Viber, WhatsApp, e-pošta)
-- **Google Drive sinhronizacija** ☁️ — isti podaci na svim tvojim uređajima
+- **Google Drive sinhronizacija** ☁️ — isti podaci i podešavanja (profil, ciljevi, izgled, podsetnici) na svim tvojim uređajima
 - **Rezervna kopija** — napravi / vrati jednim dugmetom; izvoz dnevnika za Excel (CSV)
 - **Podrži autora** ☕ — aplikacija je besplatna; donacija za kafu (broj računa i IPS QR kod)
 - **Izgled** — tamna, svetla ili automatska tema, boja akcenta
@@ -56,6 +56,12 @@ Podaci se čuvaju u fajlu „Atmos Ishrana — podaci.json“ na tvom Google Dri
 Vrednosti su okvirne i ne zamenjuju savet lekara ili nutricioniste. Podaci o proizvodima: © doprinosioci Open Food Facts, licenca ODbL.
 
 ## Verzije
+
+### 1.2
+- Pouzdanije očitavanje tabele sa pakovanja: latinica, ćirilica i mešano (srpski, makedonski, albanski, engleski…), nazivi u dva reda, ispravka čestih grešaka (g→9, izgubljen zarez), provera po kalorijama, više prolaza
+- Označavanje tabele prstom i okretanje slike pre očitavanja
+- Sinhronizacija profila i podešavanja (težina, visina, ciljevi, post, izgled, podsetnici); novi uređaj preuzima podatke sa Drive-a umesto da ih pregazi
+- Baza proširena na oko 350 namirnica sa domaćeg tržišta
 
 ### 1.1
 - Recepti, šabloni obroka, ponavljanje celog dana

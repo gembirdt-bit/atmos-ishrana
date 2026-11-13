@@ -133,7 +133,7 @@ a{color:var(--acc)}
 <script src="foods.js"></script>
 <script>
 'use strict';
-const VER='1.1',KEY='atmosIshrana1';
+const VER='1.2',KEY='atmosIshrana1';
 const MEALS=[['b','Doručak','🌅'],['l','Ručak','🍲'],['d','Večera','🌙'],['s','Užine','🍎']];
 const MEAL=Object.fromEntries(MEALS.map(m=>[m[0],m]));
 const MACC={b:'doručak',l:'ručak',d:'večeru',s:'užine'};
@@ -158,8 +158,8 @@ function dlabel(s){const t=today();if(s===t)return'Danas';if(s===addDays(t,-1))r
 const r0=x=>Math.round(Number(x)||0);
 const r1=x=>{const v=Math.round((Number(x)||0)*10)/10;return String(v).replace('.',',')};
 const num=v=>{if(v==null||v==='')return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
-const CYR={'а':'a','б':'b','в':'v','г':'g','д':'d','ђ':'dj','е':'e','ж':'z','з':'z','и':'i','ј':'j','к':'k','л':'l','љ':'lj','м':'m','н':'n','њ':'nj','о':'o','п':'p','р':'r','с':'s','т':'t','ћ':'c','у':'u','ф':'f','х':'h','ц':'c','ч':'c','џ':'dz','ш':'s'};
-const norm=s=>String(s||'').toLowerCase().replace(/[а-џ]/g,c=>CYR[c]||c).replace(/đ/g,'dj').normalize('NFD').replace(/[̀-ͯ]/g,'');
+const CYR={'а':'a','б':'b','в':'v','г':'g','д':'d','ђ':'dj','е':'e','ж':'z','з':'z','и':'i','ј':'j','к':'k','л':'l','љ':'lj','м':'m','н':'n','њ':'nj','о':'o','п':'p','р':'r','с':'s','т':'t','ћ':'c','у':'u','ф':'f','х':'h','ц':'c','ч':'c','џ':'dz','ш':'s','ќ':'c','ѓ':'dj','ѕ':'dz','й':'j','ы':'y','э':'e','ю':'ju','я':'ja','щ':'s','ъ':'','ь':'','ё':'e','є':'e','і':'i','ї':'i'};
+const norm=s=>String(s||'').toLowerCase().replace(/[а-џ]/g,c=>CYR[c]??c).replace(/đ/g,'dj').normalize('NFD').replace(/[̀-ͯ]/g,'');
 /* dugme „nazad“ (Android) zatvara otvoreni prozor umesto da izađe iz aplikacije */
 let dDepth=0,dPend=0,dIgnore=0,dSkip=0;
 function openD(d){if(d.open)return;d.showModal();dDepth++;try{history.pushState({atmosDlg:dDepth},'')}catch{}}
@@ -174,12 +174,14 @@ function freshProfile(){return{set:false,sex:'m',age:30,height:175,weight:75,goa
 function fresh(){return{v:1,profile:freshProfile(),entries:[],foods:[],weights:[],water:[],recipes:[],templates:[],activities:[],settings:{theme:'dark',accent:ACCENTS[0]}}}
 function normDb(x){const f=fresh();x=x&&typeof x==='object'?x:{};
   const o={v:1,profile:Object.assign(freshProfile(),x.profile||{}),settings:Object.assign(f.settings,x.settings||{})};
-  COLLS.forEach(k=>o[k]=Array.isArray(x[k])?x[k].filter(r=>r&&r.id):[]);return o}
+  COLLS.forEach(k=>o[k]=Array.isArray(x[k])?x[k].filter(r=>r&&r.id):[]);o._mt=x._mt&&typeof x._mt==='object'?x._mt:{};o._lh=x._lh&&typeof x._lh==='object'?x._lh:{};return o}
 let db=(()=>{try{return normDb(JSON.parse(localStorage.getItem(KEY)))}catch{return fresh()}})();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch{toast('⚠ Memorija uređaja je puna')}gdSoon()}
+function markMt(){if(!db._mt)db._mt={};if(!db._lh)db._lh={};const s=gdSingles();
+  for(const k in s){if(!s[k])continue;const h=gdHash(s[k]);if(db._lh[k]!==h){if(db._lh[k]!==undefined)db._mt[k]=Date.now();db._lh[k]=h}}}
+function save(){markMt();try{localStorage.setItem(KEY,JSON.stringify(db))}catch{toast('⚠ Memorija uređaja je puna')}gdSoon()}
 const S=()=>db.settings,P=()=>db.profile;
 const hasData=()=>COLLS.some(k=>db[k].length);
-function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch{}}
+function saveLocal(){markMt();try{localStorage.setItem(KEY,JSON.stringify(db))}catch{}}
 
 /* ---------- ciljevi ---------- */
 function calc(){const p=P(),kg=Number(p.weight)||70,cm=Number(p.height)||170,age=Number(p.age)||30;
@@ -468,52 +470,163 @@ function ffSave(){const name=$('#ffn').value.trim();if(!name){toast('Upiši nazi
 const TESS='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 let ocrW=null;
 function ocrMsg(h){const b=$('#ocrbox');if(b)b.innerHTML=h}
-function ocrProg(t,p){ocrMsg(`<div class="warnb" style="background:var(--card2);border-color:var(--line)"><span class="spin"></span> ${esc(t)}<div class="bar" style="margin-top:8px"><i style="width:${Math.round((p||0)*100)}%;background:var(--acc)"></i></div></div>`)}
+function ocrProg(t,p){if(!ocrRun)return;ocrMsg(`<div class="warnb" style="background:var(--card2);border-color:var(--line)"><span class="spin"></span> ${esc(t)}<div class="bar" style="margin-top:8px"><i style="width:${Math.round((p||0)*100)}%;background:var(--acc)"></i></div></div>`)}
 function loadTess(){return new Promise((res,rej)=>{if(window.Tesseract)return res();const s=document.createElement('script');s.src=TESS;s.onload=res;s.onerror=()=>rej(new Error('offline'));document.head.appendChild(s)})}
-async function ocrWorker(){if(ocrW)return;ocrProg('Učitavam modul za prepoznavanje…',.08);await loadTess();
+let ocrWP=null,ocrRun=false;
+function ocrWorker(){return ocrWP||(ocrWP=ocrInit().catch(e=>{ocrWP=null;throw e}))}
+async function ocrInit(){if(ocrW)return;ocrProg('Učitavam modul za prepoznavanje…',.08);await loadTess();
   const logger=m=>{if(m.status==='recognizing text')ocrProg('Čitam tabelu… '+Math.round(m.progress*100)+'%',.3+m.progress*.65);else if(/load|init/.test(m.status||''))ocrProg('Učitavam jezike (samo prvi put, ~10 MB)…',.15)};
   for(const langs of [['srp_latn','srp','eng'],['srp_latn','eng'],['eng']]){try{ocrW=await Tesseract.createWorker(langs,1,{logger});return}catch(e){ocrW=null}}
   throw new Error('offline')}
-function ocrPrep(bmp){let sc=Math.min(2600/Math.max(bmp.width,bmp.height),1800/bmp.width);sc=Math.min(sc,3);
-  const w=Math.max(300,Math.round(bmp.width*sc)),h=Math.max(300,Math.round(bmp.height*sc));
-  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d',{willReadFrequently:true});c.imageSmoothingQuality='high';c.drawImage(bmp,0,0,w,h);
+/* visina reda teksta (px) iz horizontalnog profila tamnih piksela */
+function ocrLineH(cv){const w=cv.width,h=cv.height,d=cv.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data,prof=new Float32Array(h);let s=0;
+  for(let i=0;i<d.length;i+=4)s+=d[i];const mean=s/(w*h),inv=mean<110,thr=inv?mean*1.4:mean*.6;
+  for(let y=0;y<h;y++){let n=0;for(let x=0;x<w;x+=2){const v=d[(y*w+x)*4];if(inv?v>thr:v<thr)n++}prof[y]=n/(w/2)}
+  const runs=[];let st=-1;for(let y=0;y<=h;y++){const on=y<h&&prof[y]>.012;if(on&&st<0)st=y;else if(!on&&st>=0){if(y-st>=4)runs.push(y-st);st=-1}}
+  if(runs.length<2)return 0;runs.sort((a,b)=>a-b);return runs[runs.length>>1]}
+function ocrPrep(bmp,tgt){tgt=tgt||24;let sc=Math.min(1600/Math.max(bmp.width,bmp.height),1400/bmp.width);sc=Math.min(sc,3);
+  const draw=s=>{const w=Math.max(200,Math.round(bmp.width*s)),h=Math.max(100,Math.round(bmp.height*s));const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    const c=cv.getContext('2d',{willReadFrequently:true});c.imageSmoothingQuality='high';c.drawImage(bmp,0,0,w,h);return cv};
+  let cv=draw(sc);const lh=ocrLineH(cv);   /* Tesseract najbolje čita kad je red ~20–28 px */
+  const k0=lh>0?Math.min(3,Math.max(.3,tgt/lh)):tgt/24;{const k=k0,ns=Math.min(sc*k,4000/Math.max(bmp.width,bmp.height));if(Math.abs(ns/sc-1)>.15){sc=ns;cv=draw(sc)}}
+  const w=cv.width,h=cv.height,c=cv.getContext('2d',{willReadFrequently:true});
   const im=c.getImageData(0,0,w,h),d=im.data,hist=new Uint32Array(256),n=w*h;
   for(let i=0;i<d.length;i+=4){const g=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000|0;d[i]=g;hist[g]++}
-  let lo=0,hi=255,a=0;for(;lo<255&&a+hist[lo]<n*.02;lo++)a+=hist[lo];a=0;for(;hi>0&&a+hist[hi]<n*.02;hi--)a+=hist[hi];
+  let lo=0,hi=255,a=0;for(;lo<255&&a+hist[lo]<n*.005;lo++)a+=hist[lo];a=0;for(;hi>0&&a+hist[hi]<n*.02;hi--)a+=hist[hi];
   const k=255/Math.max(hi-lo,30);let sum=0;
   for(let i=0;i<d.length;i+=4){let v=((d[i]-lo)*k)|0;v=v<0?0:v>255?255:v;d[i]=v;sum+=v}
   const inv=sum/n<110;   /* svetla slova na tamnoj podlozi → obrni */
   for(let i=0;i<d.length;i+=4){const v=inv?255-d[i]:d[i];d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}
   c.putImageData(im,0,0);return cv}
 /* iz teksta tabele izvlači vrednosti na 100 g (prva kolona) */
-function parseLabel(txt){
-  const L=norm(txt).replace(/[|\[\]{}]/g,' ').replace(/(\d)\s*[,.]\s*(\d)/g,'$1.$2').split(/\n+/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
-  const out={};const nums=t=>{const r=[];t.replace(/(?:<\s*)?(\d+(?:\.\d+)?)\s*(mg|g)?\b/g,(m,v,u)=>{let x=parseFloat(v);if(u==='mg')x/=1000;r.push(x)});return r};
-  const after=(i,re)=>{const l=L[i],m=l.match(re),rest=m?l.slice(m.index+m[0].length):l;let v=nums(rest);if(!v.length&&L[i+1]&&/^[<\d]/.test(L[i+1]))v=nums(L[i+1]);return v[0]};
-  const KEYS=[['sat',/zasic|saturat|nasycen|gesatt/],['sug',/secer|sugar|zucker|cukr/],['fib',/vlakn|fib(re|er)|ballast/],['salt',/(^|[^a-z])(so|sol|salt|salz|sare)([^a-z]|$)/],
-    ['c',/ugljen|ugljik|ogljik|carbohyd|hidrat|kohlenhyd|jaglj/],['f',/(^|[^a-z])(masti|mast|masnoc|fat|fett|tluszcz|zsir)/],['p',/protein|belanc|bjelanc|belj|eiweiss/]];
-  L.forEach((l,i)=>{for(const [k,re] of KEYS){if(out[k]!=null)continue;if(!re.test(l))continue;
-      if(k==='c'&&/secer|sugar/.test(l))continue;if(k==='f'&&/zasic|saturat|kiselin/.test(l))continue;
-      const v=after(i,re);if(v!=null&&v<=100)out[k]=v;break}});
-  const all=L.join(' \n ');let m=all.match(/(\d+(?:\.\d+)?)\s*k\s*c\s*a\s*l/);if(!m)m=all.match(/kcal\s*[:=\-]?\s*(\d+(?:\.\d+)?)/);
-  if(m&&parseFloat(m[1])<=950)out.kcal=parseFloat(m[1]);
-  else{const j=all.match(/(\d+(?:\.\d+)?)\s*k\s*j/)||all.match(/kj\s*[:=\-]?\s*(\d+(?:\.\d+)?)/);if(j&&parseFloat(j[1])<=4000)out.kcal=Math.round(parseFloat(j[1])/4.184)}
-  /* provera: kcal mora da odgovara makronutrijentima; ako ne, verovatnije je ispravno ono izračunato */
+/* ćirilična slova koja izgledaju kao latinična (OCR često pomeša pisma) */
+const HOMO={'А':'A','В':'B','Е':'E','К':'K','М':'M','Н':'H','О':'O','Р':'P','С':'C','Т':'T','Х':'X','У':'Y','а':'a','е':'e','о':'o','р':'p','с':'c','у':'y','х':'x','к':'k','м':'m','т':'t','г':'r','п':'n','и':'u','ј':'j','ѕ':'s','і':'i','З':'3','б':'6','Ь':'b','ь':'b','л':'n','д':'d','ч':'4'};
+const homo=s=>String(s||'').replace(/[Ѐ-ӿ]/g,c=>HOMO[c]||c);
+/* ispravke brojeva: O→0, l/I→1 kada stoje uz cifre */
+const fixDig=s=>s.replace(/(\d)[Oo](?=\d|\b)/g,'$10').replace(/(^|[\s<(:|])[Oo](?=[.,]\d)/g,'$10').replace(/(\d[.,]?)[Oo]/g,'$10').replace(/(\d)[lI|](?=\d)/g,'$11').replace(/(^|\s)[Oo](?=\s*m?g\b)/g,'$10');
+const OCRK=[ /* redosled je važan: prvo "od toga …" redovi */
+  ['kcal',/energ|nergj|\berga\b|enepr|exep|kcal|kkal|\bkj\b/],
+  ['sat',/zasi|3aci|acuhe|zasy|satur|ngop|gesatt|nasycen|nasyc|zasyc|nasit|nase?nen|telit/],
+  ['sug',/sec[e]?r|sacer|seder|wehep|wener|sedjer|sugar|sogar|sheq|sheg|zucker|seker|cukr|sahar|zahar|cukor/],
+  ['fib',/vlakn|fib(re|er|ra|ers)|ballast|vlaknin|kletchat|rost/],
+  ['c',/uglj?en|ugljik|ugje|ugle?v|ogljik|h[il1][cd]+rat|car[bt]o|kar[bt]o|ohy[cd]r|jagle|kohlenh|hidrat|weglowod|sacharid/],
+  ['f',/(^|[^a-z])(mast|masn|fat|fett|yndyr|zir|maznin|tluszc|tuk)/],
+  ['p',/prote|rotein|belanc|bjelanc|beljak|eiweis|bialk|belk|beltac/],
+  ['salt',/(^|[^a-z])(so|sol|soli|salt|salz|sare|kripe?|krpe|con|sul|sel)([^a-z]|$)/]];
+const SUBJ=/^(od (toga|kojih|koji|koih|kog)|of which|od ko|nga |davon|dont|z toho|w tym|od tega)/;
+function ocrKey(t){for(const [k,re] of OCRK)if(re.test(t))return k;return null}
+/* brojevi iz reda: svaki daje više kandidata (OCR često čita "g" kao "9", gubi zarez) */
+function ocrToks(raw){const s=fixDig(homo(raw)).replace(/(\d)\s*[,.]\s*(\d)/g,'$1.$2');const r=[];
+  s.replace(/(^|[\s<:|=(/\\])(\d+(?:\.\d+)?)(?=\s|$|\s*(?:m?g|%|k|\)|,|;|\/|\||'|"))\s*(%|mg)?/g,(m,pre,v,u,i)=>{if(u==='%')return m;
+    if(v==='100'&&/(^|[^a-z])(na|per|po|на|по|za|pro|je|in|ne|te|ta|u)\s*$/i.test(s.slice(Math.max(0,i-6),i+pre.length)))return m;  /* "na 100 g" iz zaglavlja */
+    r.push({s:v,mg:u==='mg'});return m});return r}
+function ocrCands(tok,main,g9){const s=tok.s,out=[],add=(v,w)=>{if(isFinite(v)&&v>=0&&!out.some(o=>Math.abs(o.v-v)<1e-9))out.push({v:Math.round(v*1000)/1000,w})};
+  let v=parseFloat(s);if(tok.mg)v/=1000;
+  if(/^0\d+$/.test(s))add(parseFloat('0.'+s.slice(1)),.9);else add(v,1);                 /* 025 → 0,25 */
+  if(/\d9$/.test(s)&&!tok.mg)add(parseFloat(s.slice(0,-1).replace(/\.$/,'')),g9?1.15:.6);       /* 349 → 34 (g→9) */
+  if(/^\d+\.\d+9$/.test(s))add(parseFloat(s.slice(0,-1)),g9?1.15:.55);
+  if(main&&/^\d{2,3}$/.test(s)&&s[0]!=='0'){add(parseFloat(s.slice(0,-1)+'.'+s.slice(-1)),.45)} /* 85 → 8,5 */
+  return out}
+/* spaja redove u logičke redove tabele (naziv u 2 reda, broj tek u drugom) */
+function ocrRows(txt){const L=String(txt||'').split(/\n+/).map(x=>x.replace(/\s+/g,' ').trim()).filter(x=>x.replace(/[^\p{L}\d]/gu,'').length>1);
+  const hasNum=l=>ocrToks(l).length>0,txtOf=l=>{l=l.replace(/[¢©€]/g,'c');return norm(l)+' | '+norm(homo(l))};const rows=[];let cur=null;
+  for(const l of L){const t=txtOf(l),k=ocrKey(t);
+    if(cur&&!hasNum(cur.raw)){const startsKey=k&&(OCRK.find(x=>x[0]===k)[1].test(t.slice(0,18))||SUBJ.test(t));
+      if(/\/\s*$/.test(cur.raw)||!startsKey||k===cur.k||(cur.k==='sat'&&k==='f')||(cur.k==='sug'&&k==='c')){cur.raw+=' '+l;cur.t+=' '+t;if(!cur.k)cur.k=k;continue}}
+    cur={raw:l,t,k};rows.push(cur)}
+  for(const r of rows)r.k=ocrKey(r.t);return rows}
+/* jedan prolaz OCR-a → kandidati po polju */
+function ocrCollect(txt,C,pw){C=C||{};pw=pw||1;const put=(k,v,w)=>{w*=pw;if(k==='salt'&&v>10)w*=.4;const a=C[k]=C[k]||[];const o=a.find(x=>Math.abs(x.v-v)<=Math.max(.011,x.v*.02));if(o){o.w+=w;if(w>o.bw){o.bw=w;o.v=v}}else a.push({v,w,bw:w})};
+  const rows=ocrRows(txt);
+  /* ako se u ovom očitavanju "g" stalno čita kao "9" (279, 6,29…), verujemo ispravci */
+  let n9=0,nt=0;for(const r of rows)if(r.k&&r.k!=='kcal')for(const t of ocrToks(r.raw)){nt++;if(/\d9$/.test(t.s))n9++}
+  const g9=nt>=4&&n9/nt>=.45;
+  for(const r of rows){if(!r.k)continue;
+    if(r.k==='kcal'){const s=fixDig(homo(norm(r.raw)===r.t?r.raw:r.raw)).toLowerCase().replace(/(\d)[.,](\d{3})(?=\s*k)/g,'$1$2').replace(/(\d)\s*[,.]\s*(\d)/g,'$1.$2');
+      const ns=[...s.matchAll(/\d+(?:\.\d+)?/g)].map(m=>({v:parseFloat(m[0]),i:m.index,e:m.index+m[0].length}));
+      for(let i=0;i<ns.length;i++)for(let j=0;j<ns.length;j++)if(i!==j){const a=ns[i].v,b=ns[j].v;if(b>0&&a/b>4.05&&a/b<4.3&&b<=950)put('kcal',b,1.6)}
+      s.replace(/(\d+(?:\.\d+)?)\s*(k\s*[cсe]?\s*[aа]\s*[l1i|]|k?cal|kkal|kal|bal|ккал)/g,(m,v)=>{v=parseFloat(v);if(v<=950)put('kcal',v,1)});
+      s.replace(/(k\s*c\s*a\s*l|kkal|ккал)\s*[:=\-]?\s*(\d+(?:\.\d+)?)/g,(m,x,v)=>{v=parseFloat(v);if(v<=950)put('kcal',v,.7)});
+      s.replace(/(\d+(?:\.\d+)?)\s*k\s*[jJ)}\]]/g,(m,v)=>{v=parseFloat(v);if(v>20&&v<=4000)put('kcal',Math.round(v/4.184),.6)});
+      s.replace(/\/\s*(\d{2,3}(?:\.\d)?)(?!\s*k\s*j)(?=\D|$)/g,(m,v)=>{v=parseFloat(v);if(v>=20&&v<=950)put('kcal',v,.6)});   /* "… kJ / 537" bez jedinice */
+      const kc=s.match(/kj\s*\/\s*kcal\D{0,4}(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);if(kc&&parseFloat(kc[2])<=950)put('kcal',parseFloat(kc[2]),1.4);
+      continue}
+    if(C['_'+r.k])continue;C['_'+r.k]=1;                     /* u jednom prolazu samo prvi red za polje */
+    const main='pcf'.includes(r.k);const tk=ocrToks(r.raw).slice(0,3);
+    tk.forEach((t,i)=>{const pw=[1,.7,.5][i];for(const c of ocrCands(t,main,g9))if(c.v<=100)put(r.k,c.v,c.w*pw)})}
+  for(const k of Object.keys(C))if(k[0]==='_')delete C[k];return C}
+/* bira najverovatniju kombinaciju — kalorije moraju da se slažu sa makronutrijentima */
+function ocrSolve(C){const top=(k,n)=>[null,...(C[k]||[]).sort((a,b)=>b.w-a.w).slice(0,n)];
+  let best=null;
+  for(const K of top('kcal',4))for(const P of top('p',5))for(const Cc of top('c',5))for(const F of top('f',5)){
+    const p=P&&P.v,c=Cc&&Cc.v,f=F&&F.v;if((p||0)+(c||0)+(f||0)>101)continue;
+    let sc=(K?K.w:0)+(P?P.w:0)+(Cc?Cc.w:0)+(F?F.w:0);
+    if(K&&P&&Cc&&F){const calc=4*p+4*c+9*f;const err=Math.abs(K.v-calc)/Math.max(K.v,calc,20);sc+=err<.035?2.8:err<.07?2.8*(1-(err-.035)/.035)+.3:-(err-.07)*8}  /* tabele su zaokružene → do ~3,5% je slaganje */
+    else if(K&&(P||Cc||F)){const calc=4*(p||0)+4*(c||0)+9*(f||0);if(calc>K.v*1.15+5)sc-=3}
+    if(!best||sc>best.sc)best={sc,kcal:K&&K.v,p,c,f}}
+  const out={};if(!best)return out;for(const k of ['kcal','p','c','f'])if(best[k]!=null)out[k]=best[k];
+  const pick=(k,ok)=>{const a=(C[k]||[]).filter(x=>ok(x.v)).sort((a,b)=>b.w-a.w);if(a.length)out[k]=a[0].v};
+  pick('sat',v=>out.f==null||v<=out.f+.05);pick('sug',v=>out.c==null||v<=out.c+.05);
+  pick('fib',v=>v<=60);pick('salt',v=>v<=40);
   if(out.p!=null&&out.c!=null&&out.f!=null){const calc=out.p*4+out.c*4+out.f*9;if(out.kcal==null||(calc>20&&Math.abs(out.kcal-calc)/calc>.45&&calc<=950))out.kcalCalc=Math.round(calc)}
   return out}
+function ocrScore(r){let n=0;for(const k of ['kcal','p','c','f','sat','sug','fib','salt'])if(r[k]!=null)n++;
+  if(r.kcal!=null&&r.p!=null&&r.c!=null&&r.f!=null){const calc=4*r.p+4*r.c+9*r.f;if(Math.abs(r.kcal-calc)/Math.max(r.kcal,calc,20)<.04)n+=3}return n}
+function parseLabel(txt){return ocrSolve(ocrCollect(txt))}
+/* adaptivna binarizacija (Sauvola-lika, preko integralne slike) — pomaže kod senki i obojene podloge */
+function ocrBin(src){const w=src.width,h=src.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d',{willReadFrequently:true});c.drawImage(src,0,0);
+  const im=c.getImageData(0,0,w,h),d=im.data,I=new Float64Array((w+1)*(h+1));
+  for(let y=0;y<h;y++){let rs=0;for(let x=0;x<w;x++){rs+=d[(y*w+x)*4];I[(y+1)*(w+1)+x+1]=I[y*(w+1)+x+1]+rs}}
+  const r=Math.max(8,Math.round(Math.min(w,h)/28));
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const x0=Math.max(0,x-r),y0=Math.max(0,y-r),x1=Math.min(w,x+r+1),y1=Math.min(h,y+r+1);
+    const s=I[y1*(w+1)+x1]-I[y0*(w+1)+x1]-I[y1*(w+1)+x0]+I[y0*(w+1)+x0],m=s/((x1-x0)*(y1-y0)),i=(y*w+x)*4,v=d[i]<m*.88?0:255;d[i]=d[i+1]=d[i+2]=v}
+  c.putImageData(im,0,0);return cv}
+/* izbor dela slike (tabela) + rotacija, pa očitavanje u više prolaza */
+let ocrS=null;
+function ocrRotated(maxSide){const b=ocrS.bmp,rot=ocrS.rot%360,sw=rot%180?b.height:b.width,sh=rot%180?b.width:b.height,k=Math.min(1,maxSide/Math.max(sw,sh));
+  const cv=document.createElement('canvas');cv.width=Math.round(sw*k);cv.height=Math.round(sh*k);const c=cv.getContext('2d');c.imageSmoothingQuality='high';
+  c.translate(cv.width/2,cv.height/2);c.rotate(rot*Math.PI/180);const dw=b.width*k,dh=b.height*k;c.drawImage(b,-dw/2,-dh/2,dw,dh);return cv}
+function ocrCropUi(){const box=$('#ocrbox');if(!box||!ocrS)return;
+  box.innerHTML=`<div class="warnb" style="background:var(--card2);border-color:var(--line)"><div class="small" style="margin-bottom:6px">Prevuci prstom preko <b>tabele sa vrednostima</b> (bez sastava i ostalog teksta), pa pritisni „Očitaj“. Ako je slika položena — okreni je.</div>
+   <canvas id="ocrcv" style="width:100%;border-radius:10px;touch-action:none;background:#000;display:block"></canvas>
+   <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="btn-s" type="button" id="ocrRot">⟳ Okreni</button><button class="btn-s" type="button" id="ocrAll">Cela slika</button><button class="btn-s btn-g" type="button" id="ocrX">Otkaži</button><button class="btn-p grow" type="button" id="ocrGo">🔍 Očitaj</button></div></div>`;
+  const cv=$('#ocrcv'),draw=()=>{const im=ocrRotated(1000);cv.width=im.width;cv.height=im.height;const c=cv.getContext('2d');c.drawImage(im,0,0);const s=ocrS.sel;
+      if(s){const x=s.x*cv.width,y=s.y*cv.height,w=s.w*cv.width,h=s.h*cv.height;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(0,0,cv.width,y);c.fillRect(0,y+h,cv.width,cv.height-y-h);c.fillRect(0,y,x,h);c.fillRect(x+w,y,cv.width-x-w,h);
+        c.strokeStyle='#34d399';c.lineWidth=Math.max(3,cv.width/250);c.strokeRect(x,y,w,h)}};
+  draw();let st=null;const pt=e=>{const r=cv.getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
+  cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);st=pt(e);ocrS.sel=null;draw()};
+  cv.onpointermove=e=>{if(!st)return;const p=pt(e);ocrS.sel={x:Math.min(st.x,p.x),y:Math.min(st.y,p.y),w:Math.abs(p.x-st.x),h:Math.abs(p.y-st.y)};draw()};
+  cv.onpointerup=()=>{st=null;if(ocrS.sel&&(ocrS.sel.w<.05||ocrS.sel.h<.04))ocrS.sel=null;draw()};
+  $('#ocrRot').onclick=()=>{ocrS.rot=(ocrS.rot+90)%360;ocrS.sel=null;draw()};
+  $('#ocrAll').onclick=()=>{ocrS.sel=null;ocrGo()};$('#ocrGo').onclick=ocrGo;$('#ocrX').onclick=()=>{ocrS=null;box.innerHTML=''}}
 async function runOcr(file){if(!$('#ocrbox'))return;
   try{ocrProg('Priprema slike…',.04);let bmp;try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'})}catch{bmp=await createImageBitmap(file)}
-    const cv=ocrPrep(bmp);await ocrWorker();
-    try{await ocrW.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1',user_defined_dpi:'300'})}catch{}
-    const {data}=await ocrW.recognize(cv);const r=parseLabel(data.text||'');
+    ocrS={bmp,rot:0,sel:null};ocrCropUi();ocrWorker().catch(()=>{})}   /* modul se učitava u pozadini dok korisnik bira deo */
+  catch(e){ocrMsg(`<div class="warnb">Slika ne može da se otvori — probaj ponovo.</div>`)}}
+async function ocrGo(){if(!ocrS||ocrRun)return;ocrRun=true;
+  try{const full=ocrRotated(3200),s=ocrS.sel;let src=full;
+    if(s){src=document.createElement('canvas');const x=Math.round(s.x*full.width),y=Math.round(s.y*full.height);src.width=Math.max(20,Math.round(s.w*full.width));src.height=Math.max(20,Math.round(s.h*full.height));src.getContext('2d').drawImage(full,x,y,src.width,src.height,0,0,src.width,src.height)}
+    const g24=ocrPrep(src,24);await ocrWorker();let g18=null,g32=null;const G18=()=>g18||(g18=ocrPrep(src,18)),G32=()=>g32||(g32=ocrPrep(src,32));
+    /* više prolaza: različita veličina slova, binarizacija i način čitanja — rezultati se ukrštaju */
+    const passes=[[g24,'6',1],[G18,'6',1],[()=>ocrBin(g24),'6',1],[G32,'6',1],[g24,'4',1],[()=>ocrBin(G18()),'4',1],[g24,'11',.6]];
+    const C={};let best='',bestN=-1,res={};
+    for(let i=0;i<passes.length;i++){let [img,psm,w]=passes[i];if(typeof img==='function')img=img();
+      ocrProg(`Čitam tabelu… (prolaz ${i+1}/${passes.length})`,.25+i*.18);
+      try{await ocrW.setParameters({tessedit_pageseg_mode:psm,preserve_interword_spaces:'1',user_defined_dpi:'300'})}catch{}
+      const {data}=await ocrW.recognize(img);const t=data.text||'';const one=parseLabel(t),n1=ocrScore(one);if(n1>bestN){bestN=n1;best=t}
+      ocrCollect(t,C,w);res=ocrSolve(C);if(i>=1&&ocrScore(res)>=10)break}
+    const r=res;
     const set=(k,v)=>{const el=$('#ff_'+k);if(el&&v!=null){el.value=String(Math.round(v*100)/100).replace('.',',');el.style.outline='2px solid var(--ok)'}};
     let n=0;['p','c','f','fib','sug','sat','salt'].forEach(k=>{if(r[k]!=null){set(k,r[k]);n++}});
     if(r.kcal!=null){set('kcal',r.kcal);n++}else if(r.kcalCalc){set('kcal',r.kcalCalc);n++}
-    const warn=r.kcal!=null&&r.kcalCalc?`<div class="xs" style="margin-top:6px">⚠ Očitane kalorije (${r1(r.kcal)}) ne slažu se sa makronutrijentima (≈ ${r.kcalCalc} kcal) — proveri ih.</div>`:'';
-    ocrMsg(`<div class="${n>=3?'okb':'warnb'}">${n?`Očitano vrednosti: <b>${n}</b> (zeleno uokvirene). Uporedi ih sa pakovanjem pre čuvanja.`:'Nisam uspeo da pročitam brojeve. Probaj oštriju sliku izbliza, samo tabelu, bez odsjaja — ili upiši ručno.'}${warn}
-      <details style="margin-top:6px"><summary>Očitani tekst</summary><pre style="white-space:pre-wrap;font-size:.72rem;max-height:160px;overflow:auto">${esc(data.text||'')}</pre></details></div>`);
+    const fit=r.kcal!=null&&r.p!=null&&r.c!=null&&r.f!=null&&Math.abs(r.kcal-(4*r.p+4*r.c+9*r.f))/Math.max(r.kcal,20)<.06;
+    const warn=r.kcal!=null&&r.kcalCalc?`<div class="xs" style="margin-top:6px">⚠ Očitane kalorije (${r1(r.kcal)}) ne slažu se sa makronutrijentima (≈ ${r.kcalCalc} kcal) — proveri ih.</div>`:fit?`<div class="xs" style="margin-top:6px">✔ Kalorije se slažu sa proteinima, UH i mastima.</div>`:'';
+    ocrMsg(`<div class="${n>=3?'okb':'warnb'}">${n?`Očitano vrednosti: <b>${n}</b> (zeleno uokvirene). Uporedi ih sa pakovanjem pre čuvanja.`:'Nisam uspeo da pročitam brojeve. Označi samo tabelu, slikaj izbliza i oštro, bez odsjaja — ili upiši ručno.'}${warn}
+      <div class="row" style="margin-top:6px;gap:6px"><button class="btn-s" type="button" id="ocrAgain">✂ Označi ponovo</button></div>
+      <details style="margin-top:6px"><summary>Očitani tekst</summary><pre style="white-space:pre-wrap;font-size:.72rem;max-height:160px;overflow:auto">${esc(best)}</pre></details></div>`);
+    ocrRun=false;const ag=$('#ocrAgain');if(ag)ag.onclick=ocrCropUi;
     toast(n?'Vrednosti očitane — proveri ih':'Vrednosti nisu pronađene')}
-  catch(e){ocrMsg(`<div class="warnb">${e&&e.message==='offline'?'Za očitavanje je potreban internet (samo prvi put, posle se jezički paket pamti).':'Očitavanje nije uspelo — probaj ponovo sa oštrijom slikom.'}</div>`)}}
+  catch(e){ocrRun=false;ocrMsg(`<div class="warnb">${e&&e.message==='offline'?'Za očitavanje je potreban internet (samo prvi put, posle se jezički paket pamti).':'Očitavanje nije uspelo — probaj ponovo sa oštrijom slikom.'}</div>`)}}
 
 /* ---------- SKENER ---------- */
 let sc={stream:null,timer:null,reader:null,done:false,meal:null,torch:false,mode:'add'};
@@ -804,7 +917,13 @@ let gdClient=null,gdBusy=false,gdT=null,gdWait=null;
 const gdStore=()=>{try{localStorage.setItem(GD_KEY,JSON.stringify(gd))}catch{}};
 const gdValid=()=>!!(gdTok&&gdTok.exp>Date.now()+60000);
 function gdHash(o){const t=JSON.stringify(o);let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)+t.length.toString(36)}
-function gdLocal(){const m={};GD_COLLS.forEach(c=>(db[c]||[]).forEach(r=>{if(r&&r.id)m[c+'/'+r.id]=r}));if(P().set)m._prof=P();return m}
+function gdLocal(){const m={};GD_COLLS.forEach(c=>(db[c]||[]).forEach(r=>{if(r&&r.id)m[c+'/'+r.id]=r}));const s=gdSingles();for(const k in s)if(s[k])m[k]=s[k];return m}
+/* profil (pol, godine, visina, težina, ciljevi, post) i podešavanja (izgled, podsetnici) — sinhronizuju se kao celina, pobeđuje novija izmena */
+function gdSetPart(s){const r=Object.assign({},s.rem||{});delete r.done;delete r.lastW;delete r.fastN;return{theme:s.theme,accent:s.accent,rem:s.rem?r:null}}
+function gdSingles(){return{_prof:P().set?P():null,_set:gdSetPart(S())}}
+function gdApplySingle(k,v){if(k==='_prof')db.profile=Object.assign(freshProfile(),v);
+  else if(k==='_set'){if(v.theme)S().theme=v.theme;if(v.accent)S().accent=v.accent;if(v.rem)S().rem=Object.assign(remCfg(),v.rem)}
+  const cur=gdSingles()[k];db._lh[k]=gdHash(cur);return cur}
 function gdLoadLib(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();
   const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=()=>res();s.onerror=()=>rej(new Error('Google biblioteka nije učitana (internet?)'));document.head.appendChild(s)})}
 async function gdAuth(consent){await gdLoadLib();
@@ -841,15 +960,18 @@ async function gdSync(manual){
     const R=remote.recs||{},loc=gdLocal(),now=Date.now(),out=Object.assign({},R);let got=0,sent=0;
     const mine={};Object.keys(loc).forEach(k=>{const h=gdHash(loc[k]);if(gd.h[k]!==h||!(k in R))mine[k]=loc[k]});
     Object.keys(gd.h).forEach(k=>{if(!(k in loc))mine[k]=null});
+    /* profil/podešavanja: ako su promenjeni i ovde i na drugom uređaju — novija izmena pobeđuje; uređaj koji se prvi put povezuje preuzima sa Drive-a */
+    ['_prof','_set'].forEach(k=>{if(!(k in mine)||!(k in R)||!R[k]||R[k].d==null)return;const rh=gdHash(R[k].d);if(rh===gd.h[k])return;
+      if(gd.h[k]===undefined||(R[k].m||0)>=(db._mt[k]||0))delete mine[k]});
     Object.keys(R).forEach(k=>{
       const rv=R[k]&&R[k].d!==undefined?R[k].d:null,rh=rv?gdHash(rv):null;
       if(k in mine)return;if(rh===(gd.h[k]||null))return;
-      if(k==='_prof'){if(rv){db.profile=Object.assign(freshProfile(),rv);gd.h[k]=gdHash(db.profile);got++}return}
+      if(k==='_prof'||k==='_set'){if(rv){gd.h[k]=gdHash(gdApplySingle(k,rv));got++}return}
       const[c,id]=k.split('/');if(!GD_COLLS.includes(c))return;
       const i=db[c].findIndex(x=>x.id===id);
       if(rv){if(i>=0)db[c][i]=rv;else db[c].push(rv);gd.h[k]=rh}else{if(i>=0)db[c].splice(i,1);delete gd.h[k]}
       got++});
-    Object.keys(mine).forEach(k=>{out[k]={t:now,d:mine[k]};sent++;if(mine[k])gd.h[k]=gdHash(mine[k]);else delete gd.h[k]});
+    Object.keys(mine).forEach(k=>{out[k]={t:now,d:mine[k]};if(k[0]==='_')out[k].m=db._mt[k]||now;sent++;if(mine[k])gd.h[k]=gdHash(mine[k]);else delete gd.h[k]});
     if(gd.fileId&&sent&&(await ver())!==v0){if((gdSync.retry=(gdSync.retry||0)+1)<=3){retry=true;gdBusy=false;setTimeout(()=>gdSync(manual),300+Math.random()*700);return}}
     gdSync.retry=0;
     if(sent||!gd.fileId)await gdUpload({app:'Atmos Ishrana',v:1,t:new Date().toISOString(),recs:out});
