@@ -133,7 +133,7 @@ a{color:var(--acc)}
 <script src="foods.js"></script>
 <script>
 'use strict';
-const VER='1.6',KEY='atmosIshrana1';
+const VER='1.7',KEY='atmosIshrana1';
 const MEALS=[['b','Doručak','🌅'],['l','Ručak','🍲'],['d','Večera','🌙'],['s','Užine','🍎']];
 const MEAL=Object.fromEntries(MEALS.map(m=>[m[0],m]));
 const MACC={b:'doručak',l:'ručak',d:'večeru',s:'užine'};
@@ -361,7 +361,7 @@ function rSettings(){const p=P(),c=calc();
     <label class="row" style="margin-top:12px;cursor:pointer" data-act="msgtog"><span style="font-size:1.3rem">${S().msgOff?'⬜':'☑️'}</span><span class="small">Motivaciona poruka u dnevniku (menja se na 2 dana)</span></label></div>`;
   h+=`<div class="card"><h3>📲 Instalacija</h3>${instEv?`<button class="btn-p" data-act="install" style="width:100%">Instaliraj aplikaciju</button>`:isStandalone()?'<div class="small muted">Aplikacija je instalirana ✔</div>':`<div class="small muted">Android / Windows (Chrome, Edge): meni ⋮ → <b>Instaliraj aplikaciju</b>.<br>iPhone (Safari): <b>Podeli</b> → <b>Dodaj na početni ekran</b>.</div>`}</div>`;
   h+=`<div class="card"><h3>☕ Podrži autora</h3><div class="small muted" style="margin-bottom:10px">Atmos Ishrana je besplatna. Ako ti se aplikacija sviđa, možeš da častiš autora kafom.</div><button class="btn-p" style="width:100%" onclick="coffeeOpen()" type="button">☕ Plati mi kafu</button></div>`;
-  h+=`<div class="card"><h3>ℹ️ O aplikaciji</h3><div class="row sp" style="margin-bottom:8px"><span>Verzija <b>${VER}</b></span><button class="btn-s" data-act="updchk">🔄 Proveri ažuriranje</button></div><div class="small muted" style="line-height:1.6">Podaci o proizvodima: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (otvorena baza, licenca ODbL). Osnovna tablica: približne vrednosti prema USDA FoodData Central.<br>
+  h+=`<div class="card"><h3>ℹ️ O aplikaciji</h3><div class="row sp" style="margin-bottom:8px"><span>Verzija <b>${VER}</b></span></div><div class="small muted" style="line-height:1.6">Podaci o proizvodima: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (otvorena baza, licenca ODbL). Osnovna tablica: približne vrednosti prema USDA FoodData Central.<br>
     <a href="privatnost.html" target="_blank" rel="noopener">Politika privatnosti</a> · <a href="uslovi.html" target="_blank" rel="noopener">Uslovi korišćenja</a><br>Podrška: <a href="mailto:vasserviserbgd@gmail.com">vasserviserbgd@gmail.com</a><br>Autor: Gemb-Bit Željko Ilić · <a href="https://gembirdt-bit.github.io/" target="_blank" rel="noopener">Sve Atmos aplikacije</a></div></div>`;
   h+=`<div class="card"><h3>📱 Još Atmos aplikacija</h3><div class="small muted" style="margin-bottom:10px">Atmos Dom (troškovi domaćinstva), Atmos Auto — servisna knjižica, Atmos Dashboard i ostale besplatne aplikacije.</div><button class="btn-p" style="width:100%" data-act="apps">🌐 Otvori Atmos aplikacije</button></div>`;
   return h}
