@@ -223,7 +223,7 @@ function render(){
   $('#fab').innerHTML=ui.tab==='dnevnik'?`<button class="pill" data-act="scan" title="Skeniraj barkod">📷 Skeniraj</button><button class="btn-p" data-act="add" title="Dodaj hranu">＋</button>`:'';
   $('#gdst').textContent=gd.on?(gdBusy?'☁️ …':gd.err?'☁️ ⚠':'☁️'):'';
   const fn={dnevnik:rDiary,hrana:rFoods,napredak:rProgress,podesavanja:rSettings}[ui.tab];
-  $('#app').innerHTML=fn()+`<footer>Atmos Ishrana ${VER} · Gemb-Bit Željko Ilić<br><button class="coffee-mini" onclick="coffeeOpen()" type="button">☕ Doniraj autoru</button> <a class="coffee-mini" style="text-decoration:none" href="https://gembirdt-bit.github.io/atmosaplikacije/" target="_blank" rel="noopener">📱 Sve Atmos aplikacije</a></footer>`;
+  $('#app').innerHTML=fn()+`<footer>Atmos Ishrana ${VER} · zeljkoracunariborca<br><button class="coffee-mini" onclick="coffeeOpen()" type="button">☕ Doniraj autoru</button> <a class="coffee-mini" style="text-decoration:none" href="https://gembirdt-bit.github.io/atmosaplikacije/" target="_blank" rel="noopener">📱 Sve Atmos aplikacije</a></footer>`;
 }
 
 /* ---------- DNEVNIK ---------- */
@@ -364,7 +364,7 @@ function rSettings(){const p=P(),c=calc();
   h+=`<div class="card"><h3>📲 Instalacija</h3>${instEv?`<button class="btn-p" data-act="install" style="width:100%">Instaliraj aplikaciju</button>`:isStandalone()?'<div class="small muted">Aplikacija je instalirana ✔</div>':`<div class="small muted">Android / Windows (Chrome, Edge): meni ⋮ → <b>Instaliraj aplikaciju</b>.<br>iPhone (Safari): <b>Podeli</b> → <b>Dodaj na početni ekran</b>.</div>`}</div>`;
   h+=`<div class="card"><h3>☕ Podrži autora</h3><div class="small muted" style="margin-bottom:10px">Atmos Ishrana je besplatna. Ako ti se aplikacija sviđa, možeš da častiš autora kafom.</div><button class="btn-p" style="width:100%" onclick="coffeeOpen()" type="button">☕ Plati mi kafu</button></div>`;
   h+=`<div class="card"><h3>ℹ️ O aplikaciji</h3><div class="row sp" style="margin-bottom:8px"><span>Verzija <b>${VER}</b></span></div><div class="small muted" style="line-height:1.6">Podaci o proizvodima: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (otvorena baza, licenca ODbL). Osnovna tablica: približne vrednosti prema USDA FoodData Central.<br>
-    <a href="privatnost.html" target="_blank" rel="noopener">Politika privatnosti</a> · <a href="uslovi.html" target="_blank" rel="noopener">Uslovi korišćenja</a><br>Podrška: <a href="mailto:vasserviserbgd@gmail.com">vasserviserbgd@gmail.com</a><br>Autor: Gemb-Bit Željko Ilić · <a href="https://gembirdt-bit.github.io/" target="_blank" rel="noopener">Sve Atmos aplikacije</a></div></div>`;
+    <a href="privatnost.html" target="_blank" rel="noopener">Politika privatnosti</a> · <a href="uslovi.html" target="_blank" rel="noopener">Uslovi korišćenja</a><br>Podrška: <a href="mailto:vasserviserbgd@gmail.com">vasserviserbgd@gmail.com</a><br>Autor: zeljkoracunariborca · <a href="https://gembirdt-bit.github.io/" target="_blank" rel="noopener">Sve Atmos aplikacije</a></div></div>`;
   h+=`<div class="card"><h3>📱 Još Atmos aplikacija</h3><div class="small muted" style="margin-bottom:10px">Atmos Dom (troškovi domaćinstva), Atmos Auto — servisna knjižica, Atmos Dashboard i ostale besplatne aplikacije.</div><button class="btn-p" style="width:100%" data-act="apps">🌐 Otvori Atmos aplikacije</button></div>`;
   return h}
 
