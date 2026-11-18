@@ -223,7 +223,7 @@ function render(){
   $('#fab').innerHTML=ui.tab==='dnevnik'?`<button class="pill" data-act="scan" title="Skeniraj barkod">📷 Skeniraj</button><button class="btn-p" data-act="add" title="Dodaj hranu">＋</button>`:'';
   $('#gdst').textContent=gd.on?(gdBusy?'☁️ …':gd.err?'☁️ ⚠':'☁️'):'';
   const fn={dnevnik:rDiary,hrana:rFoods,napredak:rProgress,podesavanja:rSettings}[ui.tab];
-  $('#app').innerHTML=fn()+`<footer>Atmos Ishrana ${VER} · Gemb-Bit Željko Ilić<br><button class="coffee-mini" onclick="coffeeOpen()" type="button">☕ Doniraj autoru</button> <a class="coffee-mini" style="text-decoration:none" href="https://gembirdt-bit.github.io/atmos-personalnitrener/" target="_blank" rel="noopener">💪 Atmos Trener</a></footer>`;
+  $('#app').innerHTML=fn()+`<footer>Atmos Ishrana ${VER} · Gemb-Bit Željko Ilić<br><button class="coffee-mini" onclick="coffeeOpen()" type="button">☕ Doniraj autoru</button> <a class="coffee-mini" style="text-decoration:none" href="https://gembirdt-bit.github.io/atmosaplikacije/" target="_blank" rel="noopener">📱 Sve Atmos aplikacije</a></footer>`;
 }
 
 /* ---------- DNEVNIK ---------- */
