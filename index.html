@@ -135,7 +135,7 @@ a{color:var(--acc)}
 <script src="foods.js"></script>
 <script>
 'use strict';
-const VER='1.7',KEY='atmosIshrana1';
+const VER='1.8',KEY='atmosIshrana1';
 const MEALS=[['b','Doručak','🌅'],['l','Ručak','🍲'],['d','Večera','🌙'],['s','Užine','🍎']];
 const MEAL=Object.fromEntries(MEALS.map(m=>[m[0],m]));
 const MACC={b:'doručak',l:'ručak',d:'večeru',s:'užine'};
@@ -951,7 +951,7 @@ const GD_CLIENT='867108184410-ctavf0871su36rju6n465rd0149ps2mu.apps.googleuserco
 const GD_SCOPE='https://www.googleapis.com/auth/drive.file',GD_NAME='Atmos Ishrana — podaci.json',GD_KEY='atmosIshrana1_gdrive';
 const GD_COLLS=COLLS;
 let gd=(()=>{try{const x=JSON.parse(localStorage.getItem(GD_KEY));if(x&&x.h)return x}catch{}return{on:false,fileId:'',h:{},last:0,err:'',email:''}})();
-let gdTok=(()=>{try{const t=JSON.parse(sessionStorage.getItem(GD_KEY+'_t'));if(t&&t.exp>Date.now()+60000)return t}catch{}return null})();
+let gdTok=(()=>{try{const t=JSON.parse(localStorage.getItem(GD_KEY+'_t'));if(t&&t.exp>Date.now()+60000)return t}catch{}return null})();
 let gdClient=null,gdBusy=false,gdT=null,gdWait=null;
 const gdStore=()=>{try{localStorage.setItem(GD_KEY,JSON.stringify(gd))}catch{}};
 const gdValid=()=>!!(gdTok&&gdTok.exp>Date.now()+60000);
@@ -968,11 +968,11 @@ function gdLoadLib(){return new Promise((res,rej)=>{if(window.google&&google.acc
 async function gdAuth(consent){await gdLoadLib();
   return new Promise((res,rej)=>{
     if(!gdClient)gdClient=google.accounts.oauth2.initTokenClient({client_id:GD_CLIENT,scope:GD_SCOPE,callback:()=>{},error_callback:()=>{}});
-    gdClient.callback=r=>{if(r&&r.access_token){gdTok={t:r.access_token,exp:Date.now()+(Number(r.expires_in)||3600)*1000};try{sessionStorage.setItem(GD_KEY+'_t',JSON.stringify(gdTok))}catch{}res()}else rej(new Error((r&&r.error)||'Dozvola nije data'))};
+    gdClient.callback=r=>{if(r&&r.access_token){gdTok={t:r.access_token,exp:Date.now()+(Number(r.expires_in)||3600)*1000};try{localStorage.setItem(GD_KEY+'_t',JSON.stringify(gdTok))}catch{}res()}else rej(new Error((r&&r.error)||'Dozvola nije data'))};
     gdClient.error_callback=e=>rej(new Error(e&&e.type==='popup_closed'?'Prozor za prijavu je zatvoren':'Prijava na Google nije uspela'));
     gdClient.requestAccessToken({prompt:consent?'consent':'',hint:gd.email||undefined})})}
 async function gdApi(url,opt){const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+gdTok.t},(opt&&opt.headers)||{})}));
-  if(r.status===401){gdTok=null;try{sessionStorage.removeItem(GD_KEY+'_t')}catch{}throw new Error('auth')}
+  if(r.status===401){gdTok=null;try{localStorage.removeItem(GD_KEY+'_t')}catch{}throw new Error('auth')}
   if(!r.ok)throw new Error('Drive greška '+r.status);return r}
 async function gdFindFile(){
   if(gd.fileId){try{const j=await (await gdApi('https://www.googleapis.com/drive/v3/files/'+gd.fileId+'?fields=id,trashed')).json();if(!j.trashed)return gd.fileId}catch(e){if(e.message==='auth')throw e}gd.fileId=''}
@@ -1030,8 +1030,33 @@ async function gdConnect(){
 function gdDisconnect(){
   if(!confirm('Prekinuti sinhronizaciju sa Google Drive-om? Podaci ostaju i na uređaju i na Drive-u.'))return;
   try{if(gdTok&&window.google&&google.accounts)google.accounts.oauth2.revoke(gdTok.t,()=>{})}catch{}
-  gdTok=null;try{sessionStorage.removeItem(GD_KEY+'_t')}catch{}
+  gdTok=null;try{localStorage.removeItem(GD_KEY+'_t')}catch{}
   gd={on:false,fileId:'',h:{},last:0,err:'',email:''};gdStore();render();toast('Veza sa Google Drive-om je prekinuta')}
+/* AUTOMATSKA SINHRONIZACIJA PO PALJENJU
+   Google dozvola traje oko sat vremena i čuva se na uređaju — aplikacija upaljena u tom roku sinhronizuje se odmah, sama.
+   Ako je dozvola istekla, obnavlja se sama na prvi dodir ekrana (pregledač dozvoljava Google prozor samo posle dodira),
+   pa se odmah sinhronizuje. Prozor se otvori i zatvori sam jer je dozvola već ranije data. */
+function gdAutoStart(){
+  if(!GD_CLIENT||!gd.on)return;
+  gdLoadLib().catch(()=>{});
+  if(gdValid()){gdSoon(1500);return}
+  gdArm();
+}
+function gdArm(){
+  if(gdArm.h||!gd.on)return;
+  gdArm.h=e=>{
+    if(!gd.on){gdDisarm();return}
+    if(gdValid()){gdDisarm();gdSoon(500);return}
+    const b=e.target&&e.target.closest&&e.target.closest('[data-act]');if(b&&/^gd/.test(b.dataset.act||''))return;   /* Drive dugmad rade sama */
+    if(typeof authState!=='undefined'&&(authState==='locked'||authState==='demo'))return;
+    if(!navigator.onLine||!(window.google&&google.accounts&&google.accounts.oauth2))return;
+    gdDisarm();gdAuth(false).then(()=>gdSync()).catch(()=>{});
+  };
+  document.addEventListener('click',gdArm.h,true);
+}
+function gdDisarm(){if(gdArm.h){document.removeEventListener('click',gdArm.h,true);gdArm.h=null}}
+/* povratak u aplikaciju iz pozadine */
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!GD_CLIENT||!gd.on)return;if(gdValid()){if(Date.now()-(gd.last||0)>60000)gdSoon(1500)}else gdArm()});
 function gdCard(){
   if(!gd.on)return`<div class="card"><h3>☁️ Google Drive</h3><div class="small muted" style="margin-bottom:10px">Čuvaj podatke na svom Google Drive-u i koristi ih na više uređaja (telefon, tablet, računar). Aplikacija vidi samo svoj fajl „${esc(GD_NAME)}“, ništa drugo sa tvog Drive-a.</div>
     <button class="btn-p" data-act="gdconnect" style="width:100%">☁️ Poveži Google Drive</button></div>`;
@@ -1070,7 +1095,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&swReg&&Date.now()-(updCheck.t||0)>3600e3){updCheck.t=Date.now();updCheck(false)}});
 matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(S().theme==='auto')render()});
 render();
-if(gd.on&&gdValid())gdSoon(800);
+gdAutoStart();
 setTimeout(remCheck,3000);
 setTimeout(motivRefresh,2500);
 if(/[?&]scan=1/.test(location.search)){history.replaceState(null,'','index.html');setTimeout(()=>{add.meal=defMeal();openScan('add')},300)}

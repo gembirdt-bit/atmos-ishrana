@@ -57,6 +57,10 @@ Vrednosti su okvirne i ne zamenjuju savet lekara ili nutricioniste. Podaci o pro
 
 ## Verzije
 
+### 1.8
+- Automatska sinhronizacija sa Google Drive-om po paljenju aplikacije: odmah ako je Google dozvola još važeća, a ako je istekla — na prvi dodir ekrana, bez traženja tastera „Sinhronizuj“
+- Sinhronizacija i kad se aplikacija vrati iz pozadine
+
 ### 1.5
 - Ime u profilu i pozdrav u dnevniku
 - Motivaciona poruka koja se menja na 2 dana (60 ugrađenih, spisak se osvežava sa stranice Atmos aplikacije); može da se isključi u Podešavanjima → Izgled
